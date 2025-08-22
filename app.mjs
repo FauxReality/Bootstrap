@@ -24,7 +24,7 @@ document.head.appendChild(l);
 
 
 // === BEGIN YOUR APP CODE ===
-// import React, { useEffect, useMemo, useState } from "react";
+// ... import React, { useEffect, useMemo, useState } from "react";
 
 // v8.1 — Patch
 // • FIX: Define nextInvoiceNumber() to persist and increment invoice numbers in localStorage.
@@ -839,7 +839,7 @@ function runSelfTests(){
   // eslint-disable-next-line no-console
   console.log(`Self-tests: invoice sequence ${pass1 && pass2 ? 'PASS' : 'FAIL'}`, {a,b,c});
 }
-
+...
 // === END YOUR APP CODE ===
 
 
