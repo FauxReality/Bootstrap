@@ -172,7 +172,7 @@ export default function App(){
     <main className="max-w-6xl mx-auto p-4">
       <nav className="mb-4 flex gap-2 text-sm flex-wrap"><Pill label="1. Registration" act={page===1} onClick={()=>setPage(1)}/><Pill label="2. Invoice" act={page===2} onClick={()=>setPage(2)}/><Pill label="3. Receipt" act={page===3} onClick={()=>setPage(3)}/></nav>
 
-      {page===1 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
+      {page===1 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6">
         <h2 className="text-lg font-semibold mb-4">Customer Registration</h2>
         <div className="mb-4 p-3 border rounded-xl bg-gray-50"><div className="flex items-center gap-2 flex-wrap"><label className="text-sm font-medium">Choose existing</label><select className="border rounded-xl px-3 py-2" value={selectedCustomerId} onChange={e=>{const id=e.target.value;setSelectedCustomerId(id);const c=customers.find(x=>x.id===id); if(c){setReg(r=>({...r,firstName:c.firstName,lastName:c.lastName,phone:c.phone,email:c.email,address:c.billing.address,city:c.billing.city,state:c.billing.state,zip:c.billing.zip,selectedServices:c.defaultServices||r.selectedServices}))}}}><option value="">— Select —</option>{customers.map(c=><option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</select><button onClick={saveFromReg} className="ml-auto rounded-xl px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 text-sm">Save current as customer</button></div></div>
         <div className="grid md:grid-cols-2 gap-4">
@@ -193,7 +193,7 @@ export default function App(){
         <div className="flex justify-end mt-6"><button disabled={!regValid} onClick={goToInvoice} className={cls("rounded-xl px-4 py-2 text-white", regValid?"bg-blue-600 hover:bg-blue-700":"bg-gray-300 cursor-not-allowed")}>Continue</button></div>
       </section>)}
 
-      {page===2 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
+      {page===2 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6">
        <div id="invoice-print">
   {/* Header: Brand left + print-only right column */}
   <div className="print:flex print:justify-between print:items-start print:gap-6">
@@ -235,8 +235,8 @@ export default function App(){
         <div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back</button><button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">Continue to Receipt</button></div>
         <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
       </section>)}
-<section>
-      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print">
+
+      {page===3 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print">
   {/* Header: Brand left + print-only right column */}
   <div className="print:flex print:justify-between print:items-start print:gap-6">
     <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
@@ -272,7 +272,7 @@ export default function App(){
   />
 </div>
 <div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue-600">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div>
-    <section>
+      </section>
          </main>
 
     {/* Settings Modal */}
