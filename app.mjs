@@ -2,6 +2,8 @@
 // Load React & ReactDOM from a CDN (no build tools needed)
 import React from "https://esm.sh/react@18";
 import ReactDOM from "https://esm.sh/react-dom@18/client";
+const { useEffect, useMemo, useState } = React;
+
 
 // Make React hooks available to your pasted code:
 const { useEffect, useMemo, useState } = React;
