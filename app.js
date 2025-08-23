@@ -43,72 +43,69 @@ const escICS=(t='')=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replac
 function openPdfFromEl(el, title){
   if (!el) return;
 
-  // Tailwind + print-tweaks so PDF matches the screen
-  const styles = `
-  <style>
-    @page { size: letter; margin: 12mm; }
-    html,body { background:#fff; }
-    *{ box-sizing:border-box }
-    body{
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
-      color:#111827; margin:0;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  // Clone the live DOM so we capture exactly what you see
+  const clone = el.cloneNode(true);
+
+  // Ensure form values are reflected in the cloned HTML
+  clone.querySelectorAll('input,textarea,select').forEach((node) => {
+    if (node.tagName === 'SELECT') {
+      [...node.options].forEach(o => (o.selected = o.value === node.value));
+    } else if (node.type === 'checkbox' || node.type === 'radio') {
+      if (node.checked) node.setAttribute('checked', '');
+      else node.removeAttribute('checked');
+    } else {
+      node.setAttribute('value', node.value ?? '');
     }
-    /* Match your on-screen container width; tweak if your app is wider/narrower */
-    .wrap{ max-width: 800px; margin:24px auto; padding:0 16px; }
-
-    /* ✅ Global cap for all images in the PDF/print */
-    img{
-      max-width:${IMG_MAX.w}px;
-      max-height:${IMG_MAX.h}px;
-      width:auto; height:auto; object-fit:contain;
-    }
-
-      /* Header layout (same as screen: logo left, text right) */
-    .brand{ display:flex; flex-direction:row; gap:12px; align-items:center; margin-bottom:16px; text-align:left }
-    .brand img{ object-fit:contain; border-radius:12px; border:1px solid #e5e7eb }
-    .brand .name{ font-size:18px; font-weight:700 }
-    .brand .meta{ color:#4b5563; font-size:16px; line-height:1.3 }
-    .brand .meta div{ margin-top:2px }
-
-    /* Tables etc. (keep your existing look) */
-    h1,h2{ font-size:22px; margin:8px 0 12px }
-    table{ width:100%; border-collapse:collapse }
-    th,td{ border-top:1px solid #e5e7eb; padding:8px; text-align:left; font-size:12px }
-    thead th{ background:#f9fafb }
-    .totals{ margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px }
-    .paylinks{ margin:12px 0; padding:10px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:12px }
-    .chip{ display:inline-block; margin:4px 6px 0 0; padding:6px 10px; border:1px solid #d1d5db; border-radius:9999px; font-size:12px; text-decoration:none; color:#1d4ed8 }
-    .muted{ color:#6b7280; font-size:12px }
-    .section{ margin:16px 0 }
-  </style>`;
+  });
 
   const html = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${title || 'Invoice'}</title>
-    <!-- Load Tailwind in the print window so all your on-screen classes render -->
+    <title>${title || 'Document'}</title>
+
+    <!-- Load Tailwind so the PDF renders just like the app -->
     <script src="https://cdn.tailwindcss.com"><\/script>
-    ${styles}
+
+    <style>
+      @page { size: letter; margin: 12mm; }
+      html,body { background:#f3f4f6; }
+      *{ box-sizing:border-box }
+      body{
+        margin:0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color:#111827;
+        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
+      }
+
+      /* Keep your image cap (logo included) */
+      img { max-width: 180px; max-height: 80px; width:auto; height:auto; object-fit: contain; }
+    </style>
   </head>
   <body>
-    <!-- We print the same markup you see on screen -->
-    <div class="wrap">${el.outerHTML}</div>
+    <!-- Center the same card you see on screen -->
+    <div class="min-h-screen flex justify-center">
+      <div class="max-w-5xl w-full p-6">
+        ${clone.outerHTML}
+      </div>
+    </div>
+
     <script>
-      // Wait for Tailwind to compile classes, then print
-      window.onload = () => setTimeout(() => { window.print(); window.close(); }, 350);
+      // Give Tailwind a moment to apply, then print
+      window.onload = () => setTimeout(() => { window.print(); window.close(); }, 400);
     <\/script>
   </body>
 </html>`;
 
-  // Use a blob URL so browsers don’t block document.write
-  const blob = new Blob([html], { type:'text/html' });
+  // Open via Blob URL (most reliable across browsers)
+  const blob = new Blob([html], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
   window.open(url, '_blank');
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
 
