@@ -41,10 +41,9 @@ const formatDateICS=(iso)=> (iso||today()).replace(/-/g,'');
 const nowStamp=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getUTCFullYear()}${z(d.getUTCMonth()+1)}${z(d.getUTCDate())}T${z(d.getUTCHours())}${z(d.getUTCMinutes())}${z(d.getUTCSeconds())}Z`;};
 const escICS=(t='')=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
 function openPdfFromEl(el, title){
-  if(!el) return;
-  const w = window.open('', '', 'noopener,noreferrer');
-  if(!w) return;
+  if (!el) return;
 
+  // ----- styles (same as before, with image cap + brand row layout) -----
   const styles = `
   <style>
     *{box-sizing:border-box}
@@ -58,14 +57,13 @@ function openPdfFromEl(el, title){
       width:auto; height:auto; object-fit:contain;
     }
 
+      /* Header: logo left, info right (print) */
     .brand{display:flex;flex-direction:row;gap:12px;align-items:center;margin-bottom:16px;text-align:left}
-    .brand .meta div{margin-top:2px}
-
-    /* ❗ Removed fixed width/height; keep only border/rounding */
     .brand img{object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}
-
     .brand .name{font-size:24px;font-weight:700}
     .brand .meta{color:#4b5563;font-size:18px;line-height:1.3}
+    .brand .meta div{margin-top:2px}
+
     h1,h2{font-size:22px;margin:8px 0 12px}
     table{width:100%;border-collapse:collapse}
     th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}
@@ -77,12 +75,29 @@ function openPdfFromEl(el, title){
     .section{margin:16px 0}
   </style>`;
 
-  const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${title||'document'}</title>${styles}</head>
-  <body><div class="wrap">${el.outerHTML}</div>
-  <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`;
+  // ----- full HTML we’ll load via a blob URL -----
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>${title || 'document'}</title>
+    ${styles}
+  </head>
+  <body>
+    <div class="wrap">${el.outerHTML}</div>
+    <script>
+      window.onload = () => {
+        setTimeout(() => { window.print(); window.close(); }, 350);
+      };
+    <\/script>
+  </body>
+</html>`;
 
-  w.document.open(); w.document.write(html); w.document.close();
-}
+  // Open as a blob URL so we don’t have to write into the new window
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');          // no noopener/noreferrer needed
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
