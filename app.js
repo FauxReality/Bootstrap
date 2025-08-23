@@ -53,8 +53,8 @@ function openPdfFromEl(el, title){
 
     /* ✅ Global cap for all images in the PDF/print */
     img{
-      max-width:${180.w}px;
-      max-height:${80.h}px;
+      max-width:${IMG_MAX.w}px;
+      max-height:${IMG_MAX.h}px;
       width:auto; height:auto; object-fit:contain;
     }
 
