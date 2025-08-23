@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple 3‑Page App</title>
+    <!-- Tailwind for styling your existing utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gray-100">
+    <div id="root"></div>
+
+    <script type="module">
+      // This file expects your module at /app.js exporting: export function mount(el){...}
+      // If you kept the name app.mjs, change the path below accordingly.
+      import { mount } from './app.js';
+      const el = document.getElementById('root');
+      try {
+        const unmount = mount(el);
+        // Expose unmount for debugging in devtools
+        window.__unmount = typeof unmount === 'function' ? unmount : () => {};
+      } catch (err) {
+        console.error('Failed to mount app.js', err);
+        el.innerHTML = '<div class="m-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">Failed to mount <code>app.js</code>. Open the browser console for details.</div>';
+      }
+    </script>
+  </body>
+</html>
