@@ -43,69 +43,72 @@ const escICS=(t='')=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replac
 function openPdfFromEl(el, title){
   if (!el) return;
 
-  // Clone the live DOM so we capture exactly what you see
-  const clone = el.cloneNode(true);
-
-  // Ensure form values are reflected in the cloned HTML
-  clone.querySelectorAll('input,textarea,select').forEach((node) => {
-    if (node.tagName === 'SELECT') {
-      [...node.options].forEach(o => (o.selected = o.value === node.value));
-    } else if (node.type === 'checkbox' || node.type === 'radio') {
-      if (node.checked) node.setAttribute('checked', '');
-      else node.removeAttribute('checked');
-    } else {
-      node.setAttribute('value', node.value ?? '');
+  // Tailwind + print-tweaks so PDF matches the screen
+  const styles = `
+  <style>
+    @page { size: letter; margin: 12mm; }
+    html,body { background:#fff; }
+    *{ box-sizing:border-box }
+    body{
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
+      color:#111827; margin:0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
-  });
+    /* Match your on-screen container width; tweak if your app is wider/narrower */
+    .wrap{ max-width: 800px; margin:24px auto; padding:0 16px; }
+
+    /* ✅ Global cap for all images in the PDF/print */
+    img{
+      max-width:${IMG_MAX.w}px;
+      max-height:${IMG_MAX.h}px;
+      width:auto; height:auto; object-fit:contain;
+    }
+
+      /* Header layout (same as screen: logo left, text right) */
+    .brand{ display:flex; flex-direction:row; gap:12px; align-items:center; margin-bottom:16px; text-align:left }
+    .brand img{ object-fit:contain; border-radius:12px; border:1px solid #e5e7eb }
+    .brand .name{ font-size:18px; font-weight:700 }
+    .brand .meta{ color:#4b5563; font-size:16px; line-height:1.3 }
+    .brand .meta div{ margin-top:2px }
+
+    /* Tables etc. (keep your existing look) */
+    h1,h2{ font-size:22px; margin:8px 0 12px }
+    table{ width:100%; border-collapse:collapse }
+    th,td{ border-top:1px solid #e5e7eb; padding:8px; text-align:left; font-size:12px }
+    thead th{ background:#f9fafb }
+    .totals{ margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px }
+    .paylinks{ margin:12px 0; padding:10px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:12px }
+    .chip{ display:inline-block; margin:4px 6px 0 0; padding:6px 10px; border:1px solid #d1d5db; border-radius:9999px; font-size:12px; text-decoration:none; color:#1d4ed8 }
+    .muted{ color:#6b7280; font-size:12px }
+    .section{ margin:16px 0 }
+  </style>`;
 
   const html = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${title || 'Document'}</title>
-
-    <!-- Load Tailwind so the PDF renders just like the app -->
+    <title>${title || 'Invoice'}</title>
+    <!-- Load Tailwind in the print window so all your on-screen classes render -->
     <script src="https://cdn.tailwindcss.com"><\/script>
-
-    <style>
-      @page { size: letter; margin: 12mm; }
-      html,body { background:#f3f4f6; }
-      *{ box-sizing:border-box }
-      body{
-        margin:0;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color:#111827;
-        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
-      }
-
-      /* Keep your image cap (logo included) */
-      img { max-width: 180px; max-height: 80px; width:auto; height:auto; object-fit: contain; }
-    </style>
+    ${styles}
   </head>
   <body>
-    <!-- Center the same card you see on screen -->
-    <div class="min-h-screen flex justify-center">
-      <div class="max-w-5xl w-full p-6">
-        ${clone.outerHTML}
-      </div>
-    </div>
-
+    <!-- We print the same markup you see on screen -->
+    <div class="wrap">${el.outerHTML}</div>
     <script>
-      // Give Tailwind a moment to apply, then print
-      window.onload = () => setTimeout(() => { window.print(); window.close(); }, 400);
+      // Wait for Tailwind to compile classes, then print
+      window.onload = () => setTimeout(() => { window.print(); window.close(); }, 350);
     <\/script>
   </body>
 </html>`;
 
-  // Open via Blob URL (most reliable across browsers)
-  const blob = new Blob([html], { type: 'text/html' });
+  // Use a blob URL so browsers don’t block document.write
+  const blob = new Blob([html], { type:'text/html' });
   const url  = URL.createObjectURL(blob);
   window.open(url, '_blank');
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
-
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
 
@@ -172,7 +175,7 @@ export default function App(){
     <main className="max-w-6xl mx-auto p-4">
       <nav className="mb-4 flex gap-2 text-sm flex-wrap"><Pill label="1. Registration" act={page===1} onClick={()=>setPage(1)}/><Pill label="2. Invoice" act={page===2} onClick={()=>setPage(2)}/><Pill label="3. Receipt" act={page===3} onClick={()=>setPage(3)}/></nav>
 
-      {page===1 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6">
+      {page===1 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
         <h2 className="text-lg font-semibold mb-4">Customer Registration</h2>
         <div className="mb-4 p-3 border rounded-xl bg-gray-50"><div className="flex items-center gap-2 flex-wrap"><label className="text-sm font-medium">Choose existing</label><select className="border rounded-xl px-3 py-2" value={selectedCustomerId} onChange={e=>{const id=e.target.value;setSelectedCustomerId(id);const c=customers.find(x=>x.id===id); if(c){setReg(r=>({...r,firstName:c.firstName,lastName:c.lastName,phone:c.phone,email:c.email,address:c.billing.address,city:c.billing.city,state:c.billing.state,zip:c.billing.zip,selectedServices:c.defaultServices||r.selectedServices}))}}}><option value="">— Select —</option>{customers.map(c=><option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</select><button onClick={saveFromReg} className="ml-auto rounded-xl px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 text-sm">Save current as customer</button></div></div>
         <div className="grid md:grid-cols-2 gap-4">
@@ -193,39 +196,9 @@ export default function App(){
         <div className="flex justify-end mt-6"><button disabled={!regValid} onClick={goToInvoice} className={cls("rounded-xl px-4 py-2 text-white", regValid?"bg-blue-600 hover:bg-blue-700":"bg-gray-300 cursor-not-allowed")}>Continue</button></div>
       </section>)}
 
-      {page===2 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6">
-       <div id="invoice-print">
-  {/* Header: Brand left + print-only right column */}
-  <div className="print:flex print:justify-between print:items-start print:gap-6">
-    <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
-    <div className="hidden print:block w-64 text-sm">
-      <div className="font-medium">Phone</div>
-      <div>{reg?.phone || '—'}</div>
-
-      <div className="font-medium mt-3">Address</div>
-      <div>{[reg?.address, reg?.city, reg?.state].filter(Boolean).join(', ') || '—'}</div>
-
-      <div className="font-medium mt-3">Services</div>
-      <div>{
-        ((invoice?.items || [])
-          .map(x => x?.name || x?.label || x?.service)
-          .filter(Boolean)
-          .join(', ')
-        ) || (Array.isArray(reg?.services) ? reg.services.join(', ') : '—')
-      }</div>
-    </div>
-  </div>
-
-  <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Invoice</h2>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-  <RO label="Customer"    val={`${reg.firstName} ${reg.lastName}`} />
-  <RO label="Phone"       val={reg.phone}  className="print:hidden" />
-  <RO label="Email"       val={reg.email} />
-  <RO label="Address"     val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="print:hidden" />
-  <RO label="Service Day" val={wday(reg.serviceDate)} />
-  <RO label="Services"    val={(reg.selectedServices || []).join(', ') || '—'} className="print:hidden" />
-</div>
+      {page===2 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
+        <div id="invoice-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Invoice</h2>
+          <div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Customer" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Phone" val={reg.phone}/><RO label="Email" val={reg.email}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Services" val={reg.selectedServices.join(', ')||'—'} /></div>
           <div className="grid md:grid-cols-3 gap-4 mb-4"><Inp label="Invoice #" val={invoice.invoiceNumber} set={v=>setInvoice({...invoice,invoiceNumber:v})}/><Inp label="Date" type="date" val={invoice.invoiceDate} set={v=>setInvoice({...invoice,invoiceDate:v})}/><Inp label="Due Date" type="date" val={invoice.dueDate} set={v=>setInvoice({...invoice,dueDate:v})}/></div>
           <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left bg-gray-50"><th className="p-2">#</th><th className="p-2">Description</th><th className="p-2">Qty</th><th className="p-2">Unit Price</th><th className="p-2">Line Total</th></tr></thead><tbody>{invoice.items.map((it,i)=>{const line=(Number(it.qty)||0)*(Number(it.price)||0);return(<tr key={i} className="border-t"><td className="p-2 align-top">{i+1}</td><td className="p-2 align-top"><input className="w-full border rounded-lg px-2 py-1" value={it.desc} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],desc:e.target.value};setInvoice({...invoice,items});}} placeholder="Service or product"/></td><td className="p-2 align-top"><input type="number" min={0} className="w-24 border rounded-lg px-2 py-1" value={it.qty} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],qty:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top"><input type="number" min={0} step="0.01" className="w-28 border rounded-lg px-2 py-1" value={it.price} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],price:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top whitespace-nowrap">{cur(line)}</td></tr>);})}</tbody></table></div>
           <div className="flex gap-2 mt-2"><button className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300" onClick={()=>{const items=[...invoice.items];items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Add Row</button><button className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" onClick={()=>{const items=[...invoice.items];items.pop();if(!items.length)items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Remove Last</button></div>
@@ -236,44 +209,8 @@ export default function App(){
         <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
       </section>)}
 
-      {page===3 && (<section> className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print">
-  {/* Header: Brand left + print-only right column */}
-  <div className="print:flex print:justify-between print:items-start print:gap-6">
-    <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
-    <div className="hidden print:block w-64 text-sm">
-      <div className="font-medium">Payment Date</div>
-      <div>{invoice?.paymentDate || invoice?.date || '—'}</div>
-
-      <div className="font-medium mt-3">Method</div>
-      <div>{invoice?.method || invoice?.paymentMethod || '—'}</div>
-
-      <div className="font-medium mt-3">Contact</div>
-      <div>{[reg?.phone, reg?.email].filter(Boolean).join(' • ') || '—'}</div>
-    </div>
-  </div>
-
-  <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Payment Receipt</h2>
-{/* Receipt info — replace BOTH grids with this */}
-<div className="grid md:grid-cols-2 gap-4 mb-6">
-  <RO label="Invoice #"    val={String(invoice.invoiceNumber)} />
-  <RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden" />
-  <RO label="Service Day"  val={wday(reg.serviceDate)} />
-  <RO label="Method"       val={payment.method} className="print:hidden" />
-  {payment.reference && <RO label="Reference" val={payment.reference} />}
-</div>
-
-<div className="grid md:grid-cols-2 gap-4 mb-6">
-  <RO label="Received From" val={`${reg.firstName} ${reg.lastName}`} />
-  <RO label="Contact"       val={`${reg.phone} • ${reg.email}`} className="print:hidden" />
-  <RO
-    label="Address"
-    val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`}
-    className="md:col-span-2"
-  />
-</div>
-<div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue-600">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div>
-      </section>
-         </main>
+      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
+    </main>
 
     {/* Settings Modal */}
     {showSettings && (<div className="fixed inset-0 bg-black/30 flex items-end md:items-center md:justify-center p-4" onClick={()=>setShowSettings(false)}><div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-4" onClick={e=>e.stopPropagation()}><div className="flex items-center justify-between mb-3"><h3 className="text-lg font-semibold">Settings</h3><button onClick={()=>setShowSettings(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">✕</button></div><div className="flex gap-2 mb-4 text-sm flex-wrap"><Tbtn a={tab==='services'} onClick={()=>setTab('services')}>Services</Tbtn><Tbtn a={tab==='methods'} onClick={()=>setTab('methods')}>Payment Methods</Tbtn><Tbtn a={tab==='branding'} onClick={()=>setTab('branding')}>Branding</Tbtn><Tbtn a={tab==='customers'} onClick={()=>setTab('customers')}>Customers</Tbtn><Tbtn a={tab==='plans'} onClick={()=>setTab('plans')}>Plans</Tbtn><Tbtn a={tab==='data'} onClick={()=>setTab('data')}>Data (Backup)</Tbtn></div>
@@ -284,10 +221,7 @@ export default function App(){
       {tab==='plans'&&(<PlansTab customers={customers} plans={plans} setPlans={setPlans} services={services} biz={biz}/>) }
       {tab==='data'&&(<div><h4 className="text-sm font-semibold mb-2">Backup & Restore</h4><div className="flex flex-wrap items-center gap-3"><button onClick={()=>{const data={services,payment_links:paymentLinks,business_profile:biz,customers,plans,invoice_seq:ls.get('invoice_seq',1000)};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`backup-${today()}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},0);}} className="rounded-xl px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">Export JSON</button><label className="inline-flex items-center gap-2 text-sm">Import JSON<input type="file" accept="application/json" onChange={e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(String(r.result||'{}'));if(o.services)setServices(o.services);if(o.payment_links)setPaymentLinks(o.payment_links);if(o.business_profile)setBiz(o.business_profile);if(o.customers)setCustomers(o.customers);if(o.plans)setPlans(o.plans);if(typeof o.invoice_seq==='number')ls.set('invoice_seq',o.invoice_seq);alert('Import complete');}catch(err){alert('Import failed: '+err);}};r.readAsText(f);}} className="block"/></label></div><p className="text-xs text-gray-500 mt-3">Export includes services, payment links, branding, customers, plans, and invoice counter.</p></div>) }
     </div></div>) }
-      <>
-    )
-  }
-      
+
     {/* Save Prompt */}
     {showSavePrompt && (<div className="fixed inset-0 bg-black/40 flex items-end md:items-center md:justify-center p-4"><div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5"><h3 className="text-lg font-semibold mb-2">Save this person to Customers?</h3><p className="text-sm text-gray-600">We can save this registration as a customer for next time.</p><label className="flex items-center gap-2 mt-4 text-sm"><input type="checkbox" checked={dontAskAgain} onChange={e=>setDontAskAgain(e.target.checked)}/> Don't ask again</label><div className="flex justify-end gap-2 mt-4"><button onClick={()=>handleSavePrompt('skip')} className="rounded-xl px-3 py-2 bg-gray-200 hover:bg-gray-300">Not now</button><button onClick={()=>handleSavePrompt('save')} className="rounded-xl px-3 py-2 bg-blue-600 text-white hover:bg-blue-700">Save</button></div></div></div>)}
 
@@ -359,4 +293,5 @@ export function mount(el){
   root.render(React.createElement(App));
   return () => root.unmount();
 }
+ 
  
