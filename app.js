@@ -253,10 +253,25 @@ export default function App(){
   </div>
 
   <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Payment Receipt</h2>
-<div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden" /><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}<RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden"/>
-<RO label="Method" val={invoice.method || invoice.paymentMethod} className="print:hidden"/>
-<RO label="Contact" val={`${reg.phone} • ${reg.email}`} className="print:hidden" />
-`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue-600">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div>
+{/* Receipt info — replace BOTH grids with this */}
+<div className="grid md:grid-cols-2 gap-4 mb-6">
+  <RO label="Invoice #"    val={String(invoice.invoiceNumber)} />
+  <RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden" />
+  <RO label="Service Day"  val={wday(reg.serviceDate)} />
+  <RO label="Method"       val={payment.method} className="print:hidden" />
+  {payment.reference && <RO label="Reference" val={payment.reference} />}
+</div>
+
+<div className="grid md:grid-cols-2 gap-4 mb-6">
+  <RO label="Received From" val={`${reg.firstName} ${reg.lastName}`} />
+  <RO label="Contact"       val={`${reg.phone} • ${reg.email}`} className="print:hidden" />
+  <RO
+    label="Address"
+    val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`}
+    className="md:col-span-2"
+  />
+</div>
+<div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue-600">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div>
     </main>
 
     {/* Settings Modal */}
