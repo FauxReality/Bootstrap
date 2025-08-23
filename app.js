@@ -2,6 +2,27 @@ import React from "https://esm.sh/react@18";
 import ReactDOM from "https://esm.sh/react-dom@18/client";
 const { useEffect, useMemo, useState } = React;
 
+// --- Global image sizing (applies to ALL images in the app) ---
+const IMG_MAX = { w: 180, h: 80 };  // ← change these if you want a different cap
+
+function injectImgMaxCSS() {
+  if (document.getElementById('img-max-css')) return;
+  const css = `
+    /* Limit every image inside our app root; maintain aspect ratio */
+    #root img {
+      max-width: ${IMG_MAX.w}px;
+      max-height: ${IMG_MAX.h}px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+  `;
+  const s = document.createElement('style');
+  s.id = 'img-max-css';
+  s.textContent = css;
+  document.head.appendChild(s);
+}
+
 /* v8.2 — Hotfix & Compact
    - FIX: define nextInvoiceNumber() (persistent, monotonic in localStorage)
    - Compact code to help with editor line limits
@@ -19,7 +40,47 @@ const wday=(iso)=>{if(!iso)return'';const d=new Date(iso+'T00:00:00');return d.t
 const formatDateICS=(iso)=> (iso||today()).replace(/-/g,'');
 const nowStamp=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getUTCFullYear()}${z(d.getUTCMonth()+1)}${z(d.getUTCDate())}T${z(d.getUTCHours())}${z(d.getUTCMinutes())}${z(d.getUTCSeconds())}Z`;};
 const escICS=(t='')=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
-function openPdfFromEl(el,title){if(!el)return;const w=window.open('','','noopener,noreferrer');if(!w)return;const styles=`<style>*{box-sizing:border-box}body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;color:#111827;margin:0}.wrap{max-width:800px;margin:24px auto;padding:0 16px}.brand{display:flex;flex-direction:column;gap:8px;align-items:center;margin-bottom:16px;text-align:center}.brand img{width:72px;height:72px;object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}.brand .name{font-size:20px;font-weight:700}.brand .meta{color:#4b5563;font-size:12px;line-height:1.3}h1,h2{font-size:22px;margin:8px 0 12px}table{width:100%;border-collapse:collapse}th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}thead th{background:#f9fafb}.totals{margin-top:12px;padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}.paylinks{margin:12px 0;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px}.chip{display:inline-block;margin:4px 6px 0 0;padding:6px 10px;border:1px solid #d1d5db;border-radius:9999px;font-size:12px;text-decoration:none;color:#1d4ed8}.muted{color:#6b7280;font-size:12px}.section{margin:16px 0}</style>`;const html=`<!doctype html><html><head><meta charset="utf-8"/><title>${title||'document'}</title>${styles}</head><body><div class="wrap">${el.outerHTML}</div><script>window.onload=()=>setTimeout(()=>window.print(),350);</script></body></html>`;w.document.open();w.document.write(html);w.document.close();}
+function openPdfFromEl(el, title){
+  if(!el) return;
+  const w = window.open('', '', 'noopener,noreferrer');
+  if(!w) return;
+
+  const styles = `
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;color:#111827;margin:0}
+    .wrap{max-width:800px;margin:24px auto;padding:0 16px}
+
+    /* ✅ Global cap for all images in the PDF/print */
+    img{
+      max-width:${180.w}px;
+      max-height:${80.h}px;
+      width:auto; height:auto; object-fit:contain;
+    }
+
+    .brand{display:flex;flex-direction:column;gap:8px;align-items:center;margin-bottom:16px;text-align:center}
+    /* ❗ Removed fixed width/height; keep only border/rounding */
+    .brand img{object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}
+
+    .brand .name{font-size:20px;font-weight:700}
+    .brand .meta{color:#4b5563;font-size:12px;line-height:1.3}
+    h1,h2{font-size:22px;margin:8px 0 12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}
+    thead th{background:#f9fafb}
+    .totals{margin-top:12px;padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}
+    .paylinks{margin:12px 0;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px}
+    .chip{display:inline-block;margin:4px 6px 0 0;padding:6px 10px;border:1px solid #d1d5db;border-radius:9999px;font-size:12px;text-decoration:none;color:#1d4ed8}
+    .muted{color:#6b7280;font-size:12px}
+    .section{margin:16px 0}
+  </style>`;
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${title||'document'}</title>${styles}</head>
+  <body><div class="wrap">${el.outerHTML}</div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`;
+
+  w.document.open(); w.document.write(html); w.document.close();
+}
 
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
@@ -35,6 +96,9 @@ function runSelfTests(){try{const k='invoice_seq_test';ls.set(k,1000);const a=Nu
 
 // ---------- App ----------
 export default function App(){
+    // Make sure the global image rules are present
+  useEffect(() => { injectImgMaxCSS(); }, []);
+   
   const [page,setPage]=useState(1); // 1=Reg 2=Invoice 3=Receipt
   // Persisted
   const [services,setServices]=useState(()=>ls.get('services',[])); useEffect(()=>ls.set('services',services),[services]);
