@@ -64,8 +64,8 @@ function openPdfFromEl(el, title){
     /* ❗ Removed fixed width/height; keep only border/rounding */
     .brand img{object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}
 
-    .brand .name{font-size:20px;font-weight:700}
-    .brand .meta{color:#4b5563;font-size:12px;line-height:1.3}
+    .brand .name{font-size:24px;font-weight:700}
+    .brand .meta{color:#4b5563;font-size:18px;line-height:1.3}
     h1,h2{font-size:22px;margin:8px 0 12px}
     table{width:100%;border-collapse:collapse}
     th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}
@@ -213,7 +213,7 @@ const Tbtn=({children,a,onClick})=> (<button onClick={onClick} className={cls("p
 const Inp=({label,val,set,type="text",ph,req,pattern})=> (<div><label className="block text-sm font-medium mb-1">{label}{req&&<span className="text-red-500">*</span>}</label><input className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring" value={val} onChange={e=>set(e.target.value)} type={type} placeholder={ph} required={req} pattern={pattern}/></div>);
 const RO=({label,val,className})=> (<div className={className}><label className="block text-sm text-gray-600">{label}</label><div className="mt-1 font-medium">{val||'—'}</div></div>);
 function Multi({options,selected,onToggle,placeholder}){const [open,setOpen]=useState(false);return(<div className="relative"><div className="flex flex-wrap gap-2 border rounded-xl px-3 py-2 min-h-[44px] cursor-pointer bg-white" onClick={()=>setOpen(!open)}>{selected.length===0?<span className="text-gray-400">{placeholder}</span>:selected.map((s,i)=>(<span key={i} className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200">{s}</span>))}<span className="ml-auto text-gray-500">▾</span></div>{open&&(<div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border rounded-xl shadow">{options.length===0&&(<div className="p-3 text-sm text-gray-500">No options yet. Add in Settings.</div>)}{options.map((opt,i)=>{const sel=selected.includes(opt);return(<button key={i} onClick={()=>onToggle(opt)} className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"><span className={cls("inline-flex h-4 w-4 items-center justify-center border rounded",sel?"bg-blue-600 border-blue-600 text-white":"bg-white")}>{sel?"✓":""}</span><span>{opt}</span></button>)})}</div>)}</div>);}
-const Brand = ({ biz, nameClass = "text-xl", metaClass = "text-lg" }) => {
+const Brand = ({ biz, nameClass = "text-2xl", metaClass = "text-lg" }) => {
   if (!(biz?.name || biz?.logoUrl || biz?.phone || biz?.email || biz?.address || biz?.city || biz?.state)) return null;
   const name   = biz?.name || "";
   const citySt = [biz?.city, biz?.state].filter(Boolean).join(", ");
