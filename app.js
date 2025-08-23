@@ -98,6 +98,7 @@ function openPdfFromEl(el, title){
   const url  = URL.createObjectURL(blob);
   window.open(url, '_blank');          // no noopener/noreferrer needed
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
