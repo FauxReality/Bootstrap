@@ -58,7 +58,9 @@ function openPdfFromEl(el, title){
       width:auto; height:auto; object-fit:contain;
     }
 
-    .brand{display:flex;flex-direction:column;gap:8px;align-items:center;margin-bottom:16px;text-align:center}
+    .brand{display:flex;flex-direction:row;gap:12px;align-items:center;margin-bottom:16px;text-align:left}
+    .brand .meta div{margin-top:2px}
+
     /* ❗ Removed fixed width/height; keep only border/rounding */
     .brand img{object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}
 
@@ -211,8 +213,54 @@ const Tbtn=({children,a,onClick})=> (<button onClick={onClick} className={cls("p
 const Inp=({label,val,set,type="text",ph,req,pattern})=> (<div><label className="block text-sm font-medium mb-1">{label}{req&&<span className="text-red-500">*</span>}</label><input className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring" value={val} onChange={e=>set(e.target.value)} type={type} placeholder={ph} required={req} pattern={pattern}/></div>);
 const RO=({label,val,className})=> (<div className={className}><label className="block text-sm text-gray-600">{label}</label><div className="mt-1 font-medium">{val||'—'}</div></div>);
 function Multi({options,selected,onToggle,placeholder}){const [open,setOpen]=useState(false);return(<div className="relative"><div className="flex flex-wrap gap-2 border rounded-xl px-3 py-2 min-h-[44px] cursor-pointer bg-white" onClick={()=>setOpen(!open)}>{selected.length===0?<span className="text-gray-400">{placeholder}</span>:selected.map((s,i)=>(<span key={i} className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200">{s}</span>))}<span className="ml-auto text-gray-500">▾</span></div>{open&&(<div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border rounded-xl shadow">{options.length===0&&(<div className="p-3 text-sm text-gray-500">No options yet. Add in Settings.</div>)}{options.map((opt,i)=>{const sel=selected.includes(opt);return(<button key={i} onClick={()=>onToggle(opt)} className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"><span className={cls("inline-flex h-4 w-4 items-center justify-center border rounded",sel?"bg-blue-600 border-blue-600 text-white":"bg-white")}>{sel?"✓":""}</span><span>{opt}</span></button>)})}</div>)}</div>);}
-const Brand=({biz})=>{if(!biz?.name&&!biz?.logoUrl&&!biz?.phone&&!biz?.email&&!biz?.address)return null;return(<div className="brand"><div>{biz.logoUrl?<img src={biz.logoUrl} alt="logo"/>:<div style={{width:72,height:72}} className="rounded-xl border flex items-center justify-center text-[10px] text-gray-400">Logo</div>}</div><div className="name">{biz.name||''}</div><div className="meta">{[biz.phone,biz.email].filter(Boolean).join(' • ')}</div><div className="meta">{biz.address||''}</div></div>)};
+const Brand = ({ biz }) => {
+  // nothing to show?
+  if (!(biz?.name || biz?.logoUrl || biz?.phone || biz?.email || biz?.address || biz?.city || biz?.state)) return null;
 
+  const name   = biz?.name || "";
+  const citySt = [biz?.city, biz?.state].filter(Boolean).join(", ");
+
+  return (
+    <div className="brand flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 text-left">
+      {/* logo (capped by your global image rule or .brand-img class) */}
+      <div>
+        {biz?.logoUrl ? (
+          <img className="brand-img" src={biz.logoUrl} alt={name || "Logo"} />
+        ) : (
+          <div
+            style={{ width: 72, height: 72 }}
+            className="rounded-xl border flex items-center justify-center text-[10px] text-gray-400"
+          >
+            Logo
+          </div>
+        )}
+      </div>
+
+      {/* text block to the right of the logo */}
+      <div className="brand-info">
+        {name ? <div className="name text-xl font-semibold">{name}</div> : null}
+
+        <div className="meta text-sm text-gray-600 leading-tight">
+          {/* phone on its own line */}
+          {biz?.phone ? <div>{biz.phone}</div> : null}
+
+          {/* email on its own line (under phone) */}
+          {biz?.email ? (
+            <div>
+              <a className="underline text-blue-600" href={`mailto:${biz.email}`}>
+                {biz.email}
+              </a>
+            </div>
+          ) : null}
+
+          {/* address / city, state (optional) */}
+          {biz?.address ? <div>{biz.address}</div> : null}
+          {citySt ? <div>{citySt}</div> : null}
+        </div>
+      </div>
+    </div>
+  );
+};
 function PlansTab({customers,plans,setPlans,services,biz}){
   const [f,setF]=useState({id:'',customerId:'',name:'',frequency:'weekly',interval:1,startDate:today(),nextDate:today(),endDate:'',services:[],items:[],dueRule:{daysAfter:7},active:true});
   const save=()=>{if(!f.customerId)return;const base={...f};if(!base.id){base.id=gid('pln');if(!base.startDate)base.startDate=today();if(!base.nextDate)base.nextDate=base.startDate;setPlans(p=>[...p,base]);}else setPlans(p=>p.map(x=>x.id===base.id?base:x));setF({id:'',customerId:'',name:'',frequency:'weekly',interval:1,startDate:today(),nextDate:today(),endDate:'',services:[],items:[],dueRule:{daysAfter:7},active:true});};
