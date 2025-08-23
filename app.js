@@ -66,7 +66,7 @@ function openPdfFromEl(el, title){
 
     .brand .name{font-size:20px;font-weight:700}
     .brand .meta{color:#4b5563;font-size:12px;line-height:1.3}
-    h1,h2{font-size:22px;margin:8px 0 12px}
+    h1,h2{font-size:50px;margin:8px 0 12px}
     table{width:100%;border-collapse:collapse}
     th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}
     thead th{background:#f9fafb}
