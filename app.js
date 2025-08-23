@@ -3,7 +3,7 @@ import ReactDOM from "https://esm.sh/react-dom@18/client";
 const { useEffect, useMemo, useState } = React;
 
 // --- Global image sizing (applies to ALL images in the app) ---
-const IMG_MAX = { w: 180, h: 80 };  // ← change these if you want a different cap
+const IMG_MAX = { w: 240, h: 120 };  // ← change these if you want a different cap
 
 function injectImgMaxCSS() {
   if (document.getElementById('img-max-css')) return;
