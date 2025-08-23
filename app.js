@@ -43,12 +43,19 @@ const escICS=(t='')=>String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replac
 function openPdfFromEl(el, title){
   if (!el) return;
 
-  // ----- styles (same as before, with image cap + brand row layout) -----
+  // Tailwind + print-tweaks so PDF matches the screen
   const styles = `
   <style>
-    *{box-sizing:border-box}
-    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;color:#111827;margin:0}
-    .wrap{max-width:800px;margin:24px auto;padding:0 16px}
+    @page { size: letter; margin: 12mm; }
+    html,body { background:#fff; }
+    *{ box-sizing:border-box }
+    body{
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
+      color:#111827; margin:0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    /* Match your on-screen container width; tweak if your app is wider/narrower */
+    .wrap{ max-width: 800px; margin:24px auto; padding:0 16px; }
 
     /* ✅ Global cap for all images in the PDF/print */
     img{
@@ -57,49 +64,51 @@ function openPdfFromEl(el, title){
       width:auto; height:auto; object-fit:contain;
     }
 
-      /* Header: logo left, info right (print) */
-    .brand{display:flex;flex-direction:row;gap:12px;align-items:center;margin-bottom:16px;text-align:left}
-    .brand img{object-fit:contain;border-radius:12px;border:1px solid #e5e7eb}
-    .brand .name{font-size:24px;font-weight:700}
-    .brand .meta{color:#4b5563;font-size:18px;line-height:1.3}
-    .brand .meta div{margin-top:2px}
+      /* Header layout (same as screen: logo left, text right) */
+    .brand{ display:flex; flex-direction:row; gap:12px; align-items:center; margin-bottom:16px; text-align:left }
+    .brand img{ object-fit:contain; border-radius:12px; border:1px solid #e5e7eb }
+    .brand .name{ font-size:18px; font-weight:700 }
+    .brand .meta{ color:#4b5563; font-size:16px; line-height:1.3 }
+    .brand .meta div{ margin-top:2px }
 
-    h1,h2{font-size:22px;margin:8px 0 12px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-top:1px solid #e5e7eb;padding:8px;text-align:left;font-size:12px}
-    thead th{background:#f9fafb}
-    .totals{margin-top:12px;padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}
-    .paylinks{margin:12px 0;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px}
-    .chip{display:inline-block;margin:4px 6px 0 0;padding:6px 10px;border:1px solid #d1d5db;border-radius:9999px;font-size:12px;text-decoration:none;color:#1d4ed8}
-    .muted{color:#6b7280;font-size:12px}
-    .section{margin:16px 0}
+    /* Tables etc. (keep your existing look) */
+    h1,h2{ font-size:22px; margin:8px 0 12px }
+    table{ width:100%; border-collapse:collapse }
+    th,td{ border-top:1px solid #e5e7eb; padding:8px; text-align:left; font-size:12px }
+    thead th{ background:#f9fafb }
+    .totals{ margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px }
+    .paylinks{ margin:12px 0; padding:10px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:12px }
+    .chip{ display:inline-block; margin:4px 6px 0 0; padding:6px 10px; border:1px solid #d1d5db; border-radius:9999px; font-size:12px; text-decoration:none; color:#1d4ed8 }
+    .muted{ color:#6b7280; font-size:12px }
+    .section{ margin:16px 0 }
   </style>`;
 
-  // ----- full HTML we’ll load via a blob URL -----
   const html = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8"/>
-    <title>${title || 'document'}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title || 'Invoice'}</title>
+    <!-- Load Tailwind in the print window so all your on-screen classes render -->
+    <script src="https://cdn.tailwindcss.com"><\/script>
     ${styles}
   </head>
   <body>
+    <!-- We print the same markup you see on screen -->
     <div class="wrap">${el.outerHTML}</div>
     <script>
-      window.onload = () => {
-        setTimeout(() => { window.print(); window.close(); }, 350);
-      };
+      // Wait for Tailwind to compile classes, then print
+      window.onload = () => setTimeout(() => { window.print(); window.close(); }, 350);
     <\/script>
   </body>
 </html>`;
 
-  // Open as a blob URL so we don’t have to write into the new window
-  const blob = new Blob([html], { type: 'text/html' });
+  // Use a blob URL so browsers don’t block document.write
+  const blob = new Blob([html], { type:'text/html' });
   const url  = URL.createObjectURL(blob);
-  window.open(url, '_blank');          // no noopener/noreferrer needed
+  window.open(url, '_blank');
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
-
 // ---------- Invoice sequence (PERSISTENT) ----------
 function nextInvoiceNumber(){const key='invoice_seq';let cur=Number(ls.get(key,1000));if(!Number.isFinite(cur))cur=1000;const nxt=cur+1;ls.set(key,nxt);return nxt;}
 
@@ -196,11 +205,11 @@ export default function App(){
           {paymentLinks?.length>0 && (<div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3"><div className="text-sm font-semibold mb-2 text-blue-900">Pay Online</div><div className="flex flex-wrap gap-3">{paymentLinks.map((l,i)=>(<a key={i} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700" href={l.url} target="_blank" rel="noopener noreferrer"><LinkIcon/> <span className="font-medium">{l.label}</span></a>))}</div></div>)}
           <div className="mt-4 grid md:grid-cols-3 gap-4 items-start"><div className="md:col-span-2"><label className="block text-sm font-medium mb-1">Notes</label><textarea className="w-full border rounded-xl px-3 py-2 min-h-[84px]" value={invoice.notes} onChange={e=>setInvoice({...invoice,notes:e.target.value})} placeholder="Optional notes for the customer"/></div><div className="bg-gray-50 rounded-xl p-4"><div className="flex justify-between text-sm"><span>Subtotal</span><span>{cur(subTotal)}</span></div><div className="flex justify-between text-base font-semibold border-t mt-2 pt-2"><span>Grand Total</span><span>{cur(subTotal)}</span></div></div></div>
         </div>
-        <div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice.invoiceNumber}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-black">Download PDF</button><button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back</button><button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">Continue to Receipt</button></div>
+        <div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back</button><button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">Continue to Receipt</button></div>
         <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
       </section>)}
 
-      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice.invoiceNumber}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-black">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
+      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
     </main>
 
     {/* Settings Modal */}
