@@ -235,7 +235,7 @@ export default function App(){
         <div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back</button><button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">Continue to Receipt</button></div>
         <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
       </section>)}
-
+<section>
       {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print">
   {/* Header: Brand left + print-only right column */}
   <div className="print:flex print:justify-between print:items-start print:gap-6">
@@ -272,7 +272,8 @@ export default function App(){
   />
 </div>
 <div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue-600">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div>
-    </main>
+    <section>
+         </main>
 
     {/* Settings Modal */}
     {showSettings && (<div className="fixed inset-0 bg-black/30 flex items-end md:items-center md:justify-center p-4" onClick={()=>setShowSettings(false)}><div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-4" onClick={e=>e.stopPropagation()}><div className="flex items-center justify-between mb-3"><h3 className="text-lg font-semibold">Settings</h3><button onClick={()=>setShowSettings(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">✕</button></div><div className="flex gap-2 mb-4 text-sm flex-wrap"><Tbtn a={tab==='services'} onClick={()=>setTab('services')}>Services</Tbtn><Tbtn a={tab==='methods'} onClick={()=>setTab('methods')}>Payment Methods</Tbtn><Tbtn a={tab==='branding'} onClick={()=>setTab('branding')}>Branding</Tbtn><Tbtn a={tab==='customers'} onClick={()=>setTab('customers')}>Customers</Tbtn><Tbtn a={tab==='plans'} onClick={()=>setTab('plans')}>Plans</Tbtn><Tbtn a={tab==='data'} onClick={()=>setTab('data')}>Data (Backup)</Tbtn></div>
