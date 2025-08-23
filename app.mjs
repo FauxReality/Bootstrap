@@ -5,9 +5,6 @@ import ReactDOM from "https://esm.sh/react-dom@18/client";
 const { useEffect, useMemo, useState } = React;
 
 
-// Make React hooks available to your pasted code:
-const { useEffect, useMemo, useState } = React;
-
 /*
 PASTE YOUR APP CODE BELOW, but with ONE tiny edit:
  - REMOVE the first line `import React, { useEffect, useMemo, useState } from "react";`
