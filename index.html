@@ -1,100 +1,111 @@
 <!doctype html>
-const el = document.getElementById('root');
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple 3-Page App</title>
+    <!-- Tailwind so your utility classes render -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>html,body,#root{height:100%}</style>
+  </head>
+  <body class="min-h-screen bg-gray-100">
+    <div id="root" class="min-h-screen"></div>
 
+    <script type="module">
+      // Robust loader for GitHub Pages (handles HTML responses + JSX in app.js)
+      const REPO_USER = "FauxReality";
+      const REPO_NAME = "Bootstrap";
+      const FILE_NAME = "app.js";    // your module file
 
-const isHTML = (txt, ct) => /text\/html/i.test(ct||"") || (txt||"").trim().startsWith('<');
-const looksLikeJSX = (txt) => /<\s*[A-Za-z]/.test((txt||"").replace(/\n|\r|\t/g,' '));
+      const PAGES_URL = `https://${REPO_USER}.github.io/${REPO_NAME}/${FILE_NAME}`;
+      const RAW_URL   = `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${FILE_NAME}`;
 
+      const el = document.getElementById('root');
+      const isHTML = (txt, ct) => /text\/html/i.test(ct||"") || (txt||"").trim().startsWith("<");
+      const looksLikeJSX = (txt) => /<\s*[A-Za-z]/.test((txt||"").replace(/\n|\r|\t/g," "));
 
-function setStatus(msg){
-el.innerHTML = `<div class="m-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm whitespace-pre-wrap">${msg}</div>`;
-}
+      function setStatus(msg){
+        el.innerHTML =
+          `<div class="m-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm whitespace-pre-wrap">${msg}</div>`;
+      }
 
+      async function ensureBabel(){
+        if (document.querySelector('script[data-babel]')) return;
+        await new Promise((resolve)=>{
+          const s = document.createElement('script');
+          s.src = 'https://unpkg.com/@babel/standalone@7.24.5/babel.min.js';
+          s.setAttribute('data-babel','1');
+          s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
+        });
+      }
 
-async function ensureBabel(){
-if (document.querySelector('script[data-babel]')) return;
-await new Promise((resolve)=>{
-const s = document.createElement('script');
-s.src = 'https://unpkg.com/@babel/standalone@7.24.5/babel.min.js';
-s.setAttribute('data-babel','1');
-s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
-});
-}
+      async function fetchText(url){
+        const res = await fetch(url, { mode:'cors' });
+        const ct  = res.headers.get('content-type') || '';
+        const txt = await res.text();
+        return { ok: res.ok, ct, txt };
+      }
 
+      async function importViaBlob(text){
+        const blob = new Blob([text], { type:'text/javascript' });
+        const url  = URL.createObjectURL(blob);
+        try { return await import(/* webpackIgnore: true */ url); }
+        finally { setTimeout(()=>URL.revokeObjectURL(url), 10_000); }
+      }
 
-async function fetchText(url){
-const res = await fetch(url, { mode:'cors' });
-const ct = res.headers.get('content-type') || '';
-const txt = await res.text();
-return { ok: res.ok, ct, txt };
-}
+      async function maybeTranspileAndImport(src){
+        if (looksLikeJSX(src)){
+          await ensureBabel();
+          const out = window.Babel.transform(src, { presets:[["react",{ runtime:"classic" }]] }).code;
+          return importViaBlob(out);
+        }
+        return importViaBlob(src);
+      }
 
+      async function loadAndMount(){
+        setStatus('Loading…');
 
-async function importViaBlob(text){
-const blob = new Blob([text], { type:'text/javascript' });
-const url = URL.createObjectURL(blob);
-try { return await import(/* webpackIgnore: true */ url); }
-finally { setTimeout(()=>URL.revokeObjectURL(url), 10_000); }
-}
+        // 1) Try direct import from Pages (works if Pages serves JS)
+        try {
+          const mod = await import(PAGES_URL);
+          if (!mod || typeof mod.mount !== 'function') throw new Error('Module missing mount()');
+          el.innerHTML=''; mod.mount(el); return;
+        } catch {}
 
+        // 2) Fetch from Pages; if it’s JS/JSX import via blob (with Babel if needed)
+        try {
+          const pg = await fetchText(PAGES_URL);
+          if (!isHTML(pg.txt, pg.ct) && pg.ok){
+            const mod = await maybeTranspileAndImport(pg.txt);
+            if (!mod || typeof mod.mount !== 'function') throw new Error('Module missing mount()');
+            el.innerHTML=''; mod.mount(el); return;
+          }
+        } catch {}
 
-async function maybeTranspileAndImport(src){
-if (looksLikeJSX(src)){
-await ensureBabel();
-const out = window.Babel.transform(src, { presets:[["react",{ runtime:"classic" }]] }).code;
-return importViaBlob(out);
-}
-return importViaBlob(src);
-}
+        // 3) Raw fallback
+        setStatus('Falling back to raw GitHub…');
+        const raw = await fetchText(RAW_URL);
+        if (!raw.ok || isHTML(raw.txt, raw.ct)){
+          setStatus(`Cannot load module.\nPages: ${PAGES_URL}\nRaw:   ${RAW_URL}`);
+          return;
+        }
+        const mod = await maybeTranspileAndImport(raw.txt);
+        if (!mod || typeof mod.mount !== 'function'){
+          setStatus('Loaded code but mount() export was not found.');
+          return;
+        }
+        el.innerHTML=''; mod.mount(el);
+      }
 
+      // Mini self-tests (optional): add ?loaderTest=1 to the URL and check the console
+      if (location.search.includes('loaderTest=1')){
+        console.group('index.html loader tests');
+        console.assert(isHTML('<html>','text/html'), 'detect HTML');
+        console.assert(looksLikeJSX('export const A=()=> <div/>'), 'detect JSX');
+        console.groupEnd();
+      }
 
-async function loadAndMount(){
-setStatus('Loading…');
-// 1) Try direct import from Pages
-try {
-const mod = await import(PAGES_URL);
-if (!mod || typeof mod.mount !== 'function') throw new Error('Module missing mount()');
-el.innerHTML=''; mod.mount(el); return;
-} catch {}
-
-
-// 2) Try fetching Pages content; import via blob (Babel if JSX)
-try {
-const pg = await fetchText(PAGES_URL);
-if (!isHTML(pg.txt, pg.ct) && pg.ok){
-const mod = await maybeTranspileAndImport(pg.txt);
-if (!mod || typeof mod.mount !== 'function') throw new Error('Module missing mount()');
-el.innerHTML=''; mod.mount(el); return;
-}
-} catch {}
-
-
-// 3) Raw fallback
-setStatus('Falling back to raw GitHub…');
-const raw = await fetchText(RAW_URL);
-if (!raw.ok || isHTML(raw.txt, raw.ct)){
-setStatus(`Cannot load module.\nPages: ${PAGES_URL}\nRaw: ${RAW_URL}`);
-return;
-}
-const mod = await maybeTranspileAndImport(raw.txt);
-if (!mod || typeof mod.mount !== 'function'){
-setStatus('Loaded code but mount() export was not found.');
-return;
-}
-el.innerHTML=''; mod.mount(el);
-}
-
-
-// Mini self-tests (optional): add ?loaderTest=1 to URL
-if (location.search.includes('loaderTest=1')){
-console.group('index.html loader tests');
-console.assert(isHTML('<html>','text/html'), 'detect HTML');
-console.assert(looksLikeJSX('export const A=()=> <div/>'), 'detect JSX');
-console.groupEnd();
-}
-
-
-loadAndMount();
-</script>
-</body>
+      loadAndMount();
+    </script>
+  </body>
 </html>
