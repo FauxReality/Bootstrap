@@ -1,18 +1,6 @@
-// app.mjs — hosted module for FauxReality/Bootstrap
-// Load React & ReactDOM from a CDN (no build tools needed)
 import React from "https://esm.sh/react@18";
 import ReactDOM from "https://esm.sh/react-dom@18/client";
 const { useEffect, useMemo, useState } = React;
-
-
-/*
-PASTE YOUR APP CODE BELOW, but with ONE tiny edit:
- - REMOVE the first line `import React, { useEffect, useMemo, useState } from "react";`
-   because we already imported React from the CDN above.
- - Do not change anything else. Keep `export default function App(){...}` exactly as is.
-*/
-
-// === BEGIN YOUR APP CODE (paste everything from your file, except its first import line) ===
 
 /* v8.2 — Hotfix & Compact
    - FIX: define nextInvoiceNumber() (persistent, monotonic in localStorage)
