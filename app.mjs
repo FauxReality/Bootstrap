@@ -24,7 +24,6 @@ document.head.appendChild(l);
 
 
 // === BEGIN YOUR APP CODE ===
-// ... import React, { useEffect, useMemo, useState } from "react";
 
 /* v8.2 — Hotfix & Compact
    - FIX: define nextInvoiceNumber() (persistent, monotonic in localStorage)
@@ -186,7 +185,11 @@ function LinkIcon(){return(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
  ...
 // === END YOUR APP CODE ===
 
-
+export default function App() {
+  // ...your app UI...
+  return React.createElement("div", null, "Hello from App");
+}
+                    
 // 4) Tiny mount API the Canvas stub will call
 export function mount(el){
 ensureBootstrap();
