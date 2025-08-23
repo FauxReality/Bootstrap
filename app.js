@@ -194,8 +194,31 @@ export default function App(){
       </section>)}
 
       {page===2 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
-        <div id="invoice-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Invoice</h2>
-          <div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Customer" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Phone" val={reg.phone}/><RO label="Email" val={reg.email}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Services" val={reg.selectedServices.join(', ')||'—'} /></div>
+       <div id="invoice-print">
+  {/* Header: Brand left + print-only right column */}
+  <div className="print:flex print:justify-between print:items-start print:gap-6">
+    <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
+    <div className="hidden print:block w-64 text-sm">
+      <div className="font-medium">Phone</div>
+      <div>{reg?.phone || '—'}</div>
+
+      <div className="font-medium mt-3">Address</div>
+      <div>{[reg?.address, reg?.city, reg?.state].filter(Boolean).join(', ') || '—'}</div>
+
+      <div className="font-medium mt-3">Services</div>
+      <div>{
+        ((invoice?.items || [])
+          .map(x => x?.name || x?.label || x?.service)
+          .filter(Boolean)
+          .join(', ')
+        ) || (Array.isArray(reg?.services) ? reg.services.join(', ') : '—')
+      }</div>
+    </div>
+  </div>
+
+  <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Invoice</h2>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Customer" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Phone" val={reg.phone} className="print:hidden /><RO label="Email" val={reg.email}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip} className="print:hidden `}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Services" val={reg.selectedServices.join(', ')||'—'} className="print:hidden /></div>
           <div className="grid md:grid-cols-3 gap-4 mb-4"><Inp label="Invoice #" val={invoice.invoiceNumber} set={v=>setInvoice({...invoice,invoiceNumber:v})}/><Inp label="Date" type="date" val={invoice.invoiceDate} set={v=>setInvoice({...invoice,invoiceDate:v})}/><Inp label="Due Date" type="date" val={invoice.dueDate} set={v=>setInvoice({...invoice,dueDate:v})}/></div>
           <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left bg-gray-50"><th className="p-2">#</th><th className="p-2">Description</th><th className="p-2">Qty</th><th className="p-2">Unit Price</th><th className="p-2">Line Total</th></tr></thead><tbody>{invoice.items.map((it,i)=>{const line=(Number(it.qty)||0)*(Number(it.price)||0);return(<tr key={i} className="border-t"><td className="p-2 align-top">{i+1}</td><td className="p-2 align-top"><input className="w-full border rounded-lg px-2 py-1" value={it.desc} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],desc:e.target.value};setInvoice({...invoice,items});}} placeholder="Service or product"/></td><td className="p-2 align-top"><input type="number" min={0} className="w-24 border rounded-lg px-2 py-1" value={it.qty} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],qty:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top"><input type="number" min={0} step="0.01" className="w-28 border rounded-lg px-2 py-1" value={it.price} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],price:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top whitespace-nowrap">{cur(line)}</td></tr>);})}</tbody></table></div>
           <div className="flex gap-2 mt-2"><button className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300" onClick={()=>{const items=[...invoice.items];items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Add Row</button><button className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" onClick={()=>{const items=[...invoice.items];items.pop();if(!items.length)items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Remove Last</button></div>
@@ -206,7 +229,27 @@ export default function App(){
         <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
       </section>)}
 
-      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
+      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print">
+  {/* Header: Brand left + print-only right column */}
+  <div className="print:flex print:justify-between print:items-start print:gap-6">
+    <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
+    <div className="hidden print:block w-64 text-sm">
+      <div className="font-medium">Payment Date</div>
+      <div>{invoice?.paymentDate || invoice?.date || '—'}</div>
+
+      <div className="font-medium mt-3">Method</div>
+      <div>{invoice?.method || invoice?.paymentMethod || '—'}</div>
+
+      <div className="font-medium mt-3">Contact</div>
+      <div>{[reg?.phone, reg?.email].filter(Boolean).join(' • ') || '—'}</div>
+    </div>
+  </div>
+
+  <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Payment Receipt</h2>
+<div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden" /><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}<RO label="Payment Date" val={invoice.paymentDate || invoice.date} className="print:hidden"/>
+<RO label="Method" val={invoice.method || invoice.paymentMethod} className="print:hidden"/>
+<RO label="Contact" val={`${reg.phone} • ${reg.email}`} className="print:hidden" />
+`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
     </main>
 
     {/* Settings Modal */}
