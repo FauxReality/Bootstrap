@@ -233,8 +233,23 @@ export default function App(){
       {page===3 && (
   <section className="bg-white rounded-2xl shadow p-4 md:p-6">
     <div id="receipt-print">
-      <Brand biz={biz}/>
-      <h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2>
+  {/* Header: Brand left + print-only right column */}
+  <div className="print:flex print:justify-between print:items-start print:gap-6">
+    <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
+    {/* Right column: PDF only */}
+    <div className="hidden print:block w-64 text-sm">
+      <div className="font-medium">Payment Date</div>
+      <div>{payment?.date || invoice?.paymentDate || invoice?.date || '—'}</div>
+
+      <div className="font-medium mt-3">Method</div>
+      <div>{payment?.method || invoice?.method || invoice?.paymentMethod || '—'}</div>
+
+      <div className="font-medium mt-3">Contact</div>
+      <div>{[reg?.phone, reg?.email].filter(Boolean).join(' • ') || '—'}</div>
+    </div>
+  </div>
+
+  <h2 className="text-lg font-semibold mb-4 text-center print:text-left">Payment Receipt</h2>
 
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <RO label="Invoice #"    val={String(invoice.invoiceNumber)} />
