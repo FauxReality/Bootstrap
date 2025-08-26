@@ -256,7 +256,26 @@ function saveEdit(){
   return (<div className="min-h-screen bg-gray-100 text-gray-900">
     <header className="bg-white sticky top-0 z-10 shadow-sm"><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><h1 className="text-xl font-semibold">Simple 3-Page App</h1><button onClick={()=>{setShowSettings(true);setTab('services');}} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300">Settings <GearIcon/></button></div></header>
 
-    <main className="max-w-6xl mx-auto p-4">
+   <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
+  <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      {/* Optional tiny logo */}
+      {/* {biz?.logoUrl && <img src={biz.logoUrl} alt="" className="w-6 h-6 rounded" />} */}
+      <span className="font-semibold tracking-tight">
+        {biz?.name || 'Care-Free Tails'}
+      </span>
+    </div>
+
+    <button
+      onClick={()=>setShowSettings(true)}
+      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border hover:bg-gray-50 text-sm"
+      aria-label="Open settings"
+    >
+      ⚙️ <span className="hidden sm:inline">Settings</span>
+    </button>
+  </div>
+</header>
+
       <nav className="mb-4 flex gap-2 text-sm flex-wrap"><Pill label="1. Registration" act={page===1} onClick={()=>setPage(1)}/><Pill label="2. Invoice" act={page===2} onClick={()=>setPage(2)}/><Pill label="3. Receipt" act={page===3} onClick={()=>setPage(3)}/></nav>
 
       {page===1 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
