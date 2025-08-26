@@ -217,72 +217,211 @@ function saveEdit(){
         <div className="flex justify-end mt-6"><button disabled={!regValid} onClick={goToInvoice} className={cls("rounded-xl px-4 py-2 text-white", regValid?"bg-blue-600 hover:bg-blue-700":"bg-gray-300 cursor-not-allowed")}>Continue</button></div>
       </section>)}
 
-      {page===2 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6">
-        <div id="invoice-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Invoice</h2>
-          <div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Customer" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Phone" val={reg.phone}/><RO label="Email" val={reg.email}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Services" val={reg.selectedServices.join(', ')||'—'} /></div>
-          <div className="grid md:grid-cols-3 gap-4 mb-4"><Inp label="Invoice #" val={invoice.invoiceNumber} set={v=>setInvoice({...invoice,invoiceNumber:v})}/><Inp label="Date" type="date" val={invoice.invoiceDate} set={v=>setInvoice({...invoice,invoiceDate:v})}/><Inp label="Due Date" type="date" val={invoice.dueDate} set={v=>setInvoice({...invoice,dueDate:v})}/></div>
-          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left bg-gray-50"><th className="p-2">#</th><th className="p-2">Description</th><th className="p-2">Qty</th><th className="p-2">Unit Price</th><th className="p-2">Line Total</th></tr></thead><tbody>{invoice.items.map((it,i)=>{const line=(Number(it.qty)||0)*(Number(it.price)||0);return(<tr key={i} className="border-t"><td className="p-2 align-top">{i+1}</td><td className="p-2 align-top"><input className="w-full border rounded-lg px-2 py-1" value={it.desc} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],desc:e.target.value};setInvoice({...invoice,items});}} placeholder="Service or product"/></td><td className="p-2 align-top"><input type="number" min={0} className="w-24 border rounded-lg px-2 py-1" value={it.qty} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],qty:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top"><input type="number" min={0} step="0.01" className="w-28 border rounded-lg px-2 py-1" value={it.price} onChange={e=>{const items=[...invoice.items];items[i]={...items[i],price:e.target.value};setInvoice({...invoice,items});}}/></td><td className="p-2 align-top whitespace-nowrap">{cur(line)}</td></tr>);})}</tbody></table></div>
-          <div className="flex gap-2 mt-2"><button className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300" onClick={()=>{const items=[...invoice.items];items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Add Row</button><button className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200" onClick={()=>{const items=[...invoice.items];items.pop();if(!items.length)items.push({desc:'',qty:1,price:0});setInvoice({...invoice,items});}}>Remove Last</button></div>
-          {paymentLinks?.length>0 && (<div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3"><div className="text-sm font-semibold mb-2 text-blue-900">Pay Online</div><div className="flex flex-wrap gap-3">{paymentLinks.map((l,i)=>(
-  <a
-    key={i}
-    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700"
-    href={l.url}
-    onClick={(e)=>{ e.preventDefault(); setPayConfirm({open:true, link:l}); }}
-    rel="noopener noreferrer"
-  >
-    <LinkIcon/>
-    <span className="font-medium">{l.label}</span>
-  </a>
-))}
-     {payConfirm.open && (
-  <div
-    className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-    onClick={()=>setPayConfirm({open:false, link:null})}
-  >
-    <div
-      className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-4"
-      onClick={e=>e.stopPropagation()}
-    >
-      <h3 className="text-lg font-semibold">Pay {cur(subTotal)}</h3>
-      <p className="text-sm text-gray-600 mt-1">
-        You’re about to open <strong>{payConfirm.link?.label}</strong> to pay the invoice total.
-      </p>
+      {page===2 && (
+  <section className="bg-white rounded-2xl shadow p-4 md:p-6">
+    <div id="invoice-print">
+      {/* Header: Brand left + right column shown in PDF */}
+      <div className="pdf-header">
+        <Brand biz={biz} nameClass="text-lg" metaClass="text-base" />
+        <div className="pdf-right">
+          <div className="font-medium">Phone</div>
+          <div>{reg?.phone || '—'}</div>
 
-      <div className="mt-4 bg-gray-50 rounded-xl p-3 text-sm">
-        <div className="flex justify-between">
-          <span>Grand Total</span>
-          <span className="font-semibold">{cur(subTotal)}</span>
+          <div className="font-medium" style={{marginTop:12}}>Address</div>
+          <div>{[reg?.address, reg?.city, reg?.state].filter(Boolean).join(', ') || '—'}</div>
+
+          <div className="font-medium" style={{marginTop:12}}>Services</div>
+          <div>{
+            (reg?.selectedServices?.length ? reg.selectedServices
+              : Array.isArray(reg?.services) ? reg.services : []
+            ).join(', ') || '—'
+          }</div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 mt-4">
+      <h2 className="text-lg font-semibold mb-4 text-center">Invoice</h2>
+
+      {/* Info grid — hide duplicates in PDF */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <RO label="Customer"    val={`${reg.firstName} ${reg.lastName}`} />
+        <RO label="Phone"       val={reg.phone} className="pdf-hide" />
+        <RO label="Email"       val={reg.email} />
+        <RO label="Address"     val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="pdf-hide" />
+        <RO label="Service Day" val={wday(reg.serviceDate)} />
+        <RO label="Services"    val={(reg.selectedServices?.length ? reg.selectedServices : reg.services || []).join(', ') || '—'} className="pdf-hide" />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <Inp label="Invoice #" val={invoice.invoiceNumber} set={v=>setInvoice({...invoice,invoiceNumber:v})}/>
+        <Inp label="Date" type="date" val={invoice.invoiceDate} set={v=>setInvoice({...invoice,invoiceDate:v})}/>
+        <Inp label="Due Date" type="date" val={invoice.dueDate} set={v=>setInvoice({...invoice,dueDate:v})}/>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left bg-gray-50">
+              <th className="p-2">#</th>
+              <th className="p-2">Description</th>
+              <th className="p-2">Qty</th>
+              <th className="p-2">Unit Price</th>
+              <th className="p-2">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoice.items.map((it,i)=>{
+              const line=(Number(it.qty)||0)*(Number(it.price)||0);
+              return (
+                <tr key={i} className="border-t">
+                  <td className="p-2 align-top">{i+1}</td>
+                  <td className="p-2 align-top">
+                    <input
+                      className="w-full border rounded-lg px-2 py-1"
+                      value={it.desc}
+                      onChange={e=>{
+                        const items=[...invoice.items];
+                        items[i]={...items[i],desc:e.target.value};
+                        setInvoice({...invoice,items});
+                      }}
+                      placeholder="Service or product"
+                    />
+                  </td>
+                  <td className="p-2 align-top">
+                    <input
+                      type="number" min={0}
+                      className="w-24 border rounded-lg px-2 py-1"
+                      value={it.qty}
+                      onChange={e=>{
+                        const items=[...invoice.items];
+                        items[i]={...items[i],qty:e.target.value};
+                        setInvoice({...invoice,items});
+                      }}
+                    />
+                  </td>
+                  <td className="p-2 align-top">
+                    <input
+                      type="number" min={0} step="0.01"
+                      className="w-28 border rounded-lg px-2 py-1"
+                      value={it.price}
+                      onChange={e=>{
+                        const items=[...invoice.items];
+                        items[i]={...items[i],price:e.target.value};
+                        setInvoice({...invoice,items});
+                      }}
+                    />
+                  </td>
+                  <td className="p-2 align-top whitespace-nowrap">{cur(line)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex gap-2 mt-2">
         <button
-          onClick={()=>setPayConfirm({open:false, link:null})}
-          className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300"
-        >
-          Cancel
-        </button>
-        <button
+          className="px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300"
           onClick={()=>{
-            const url = payConfirm.link?.url || '#';
-            window.open(url, '_blank', 'noopener'); // open payment link
-            setPayConfirm({open:false, link:null});
-          }}
-          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Continue
+            const items=[...invoice.items];
+            items.push({desc:'',qty:1,price:0});
+            setInvoice({...invoice,items});
+          }}>
+          Add Row
         </button>
+        <button
+          className="px-3 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
+          onClick={()=>{
+            const items=[...invoice.items];
+            items.pop();
+            if(!items.length) items.push({desc:'',qty:1,price:0});
+            setInvoice({...invoice,items});
+          }}>
+          Remove Last
+        </button>
+      </div>
+
+      {paymentLinks?.length>0 && (
+        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3">
+          <div className="text-sm font-semibold mb-2 text-blue-900">Pay Online</div>
+          <div className="flex flex-wrap gap-3">
+            {paymentLinks.map((l,i)=>(
+              <a key={i}
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700"
+                 href={l.url} target="_blank" rel="noopener noreferrer">
+                <LinkIcon/><span className="font-medium">{l.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 grid md:grid-cols-3 gap-4 items-start">
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium mb-1">Notes</label>
+          <textarea
+            className="w-full border rounded-xl px-3 py-2 min-h-[84px]"
+            value={invoice.notes}
+            onChange={e=>setInvoice({...invoice,notes:e.target.value})}
+            placeholder="Optional notes for the customer"
+          />
+        </div>
+        <div className="bg-gray-50 rounded-xl p-4">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span><span>{cur(subTotal)}</span>
+          </div>
+          <div className="flex justify-between text-base font-semibold border-t mt-2 pt-2">
+            <span>Grand Total</span><span>{cur(subTotal)}</span>
+          </div>
+        </div>
+      </div>
+    </div>{/* /#invoice-print */}
+
+    <div className="flex flex-wrap gap-2 justify-end mt-6">
+      <button
+        onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice?.invoiceNumber ?? ''}`)}
+        className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-black">
+        Download PDF
+      </button>
+      <button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">
+        Back
+      </button>
+      <button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">
+        Continue to Receipt
+      </button>
+    </div>
+
+    <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm">
+      <p className="font-medium mb-2">Mark Payment (for Receipt)</p>
+      <div className="grid md:grid-cols-4 gap-3">
+        <div>
+          <label className="block text-sm mb-1">Method</label>
+          <select
+            className="w-full border rounded-xl px-3 py-2"
+            value={payment.method}
+            onChange={e=>setPayment({...payment,method:e.target.value})}>
+            {['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <Inp label="Amount" type="number" step="0.01"
+               val={payment.amount}
+               set={v=>setPayment({...payment,amount:Number(v)||0})}/>
+        </div>
+        <div>
+          <Inp label="Payment Date" type="date"
+               val={payment.date}
+               set={v=>setPayment({...payment,date:v})}/>
+        </div>
+        <div>
+          <Inp label="Reference / Last 4"
+               val={payment.reference}
+               set={v=>setPayment({...payment,reference:v})}
+               ph="Optional"/>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 )}
-
-          <div className="mt-4 grid md:grid-cols-3 gap-4 items-start"><div className="md:col-span-2"><label className="block text-sm font-medium mb-1">Notes</label><textarea className="w-full border rounded-xl px-3 py-2 min-h-[84px]" value={invoice.notes} onChange={e=>setInvoice({...invoice,notes:e.target.value})} placeholder="Optional notes for the customer"/></div><div className="bg-gray-50 rounded-xl p-4"><div className="flex justify-between text-sm"><span>Subtotal</span><span>{cur(subTotal)}</span></div><div className="flex justify-between text-base font-semibold border-t mt-2 pt-2"><span>Grand Total</span><span>{cur(subTotal)}</span></div></div></div>
-        </div>
-        <div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('invoice-print'),`Invoice-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back</button><button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">Continue to Receipt</button></div>
-        <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm"><p className="font-medium mb-2">Mark Payment (for Receipt)</p><div className="grid md:grid-cols-4 gap-3"><div><label className="block text-sm mb-1">Method</label><select className="w-full border rounded-xl px-3 py-2" value={payment.method} onChange={e=>setPayment({...payment,method:e.target.value})}>{['Cash','Cashapp','Paypal','Venmo'].map(m=><option key={m} value={m}>{m}</option>)}</select></div><div><Inp label="Amount" type="number" step="0.01" val={payment.amount} set={v=>setPayment({...payment,amount:Number(v)||0})}/></div><div><Inp label="Payment Date" type="date" val={payment.date} set={v=>setPayment({...payment,date:v})}/></div><div><Inp label="Reference / Last 4" val={payment.reference} set={v=>setPayment({...payment,reference:v})} ph="Optional"/></div></div></div>
-      </section>)}
 
       {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
     </main>
