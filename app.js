@@ -485,13 +485,11 @@ function saveEdit(){
         className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-black">
         Download PDF
       </button>
-      <button onClick={()=>setPage(1)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">
+      <button onClick={()=>setPage(1)} className={`${BTN.secondary}`}>Back</button>
         Back
       </button>
-      <button onClick={()=>setPage(3)} className="rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700">
-        Continue to Receipt
-      </button>
-    </div>
+      <button onClick={()=>setPage(3)} className={`${BTN.primary} bg-green-600 hover:bg-green-700`}>Continue to Receipt</button>
+</div>
 
     <div className="mt-8 p-4 bg-yellow-50 rounded-xl text-sm">
       <p className="font-medium mb-2">Mark Payment (for Receipt)</p>
@@ -693,7 +691,7 @@ function saveEdit(){
 
     <div className="flex justify-end mt-6">
       <button onClick={()=>setShowSettings(false)}
-              className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">
+              className={`${BTN.primary}`}>Download PDF</button>
         Done
       </button>
     </div>
