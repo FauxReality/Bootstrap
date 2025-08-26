@@ -689,7 +689,6 @@ function saveEdit(){
       <button onClick={()=>setShowSettings(false)}
               className={`${BTN.primary}`}>Download PDF</button>
         Done
-      </button>
     </div>
   </div>
 )}
