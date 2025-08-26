@@ -537,7 +537,7 @@ function saveEdit(){
         <RO label="Invoice #"    val={String(invoice.invoiceNumber)} />
         <RO label="Payment Date" val={payment.date} />
         <RO label="Service Day"  val={wday(reg.serviceDate)} />
-        <RO label="Method"       val={payment.method} />
+               <RO label="Method"       val={payment.method} />
         {payment.reference && <RO label="Reference" val={payment.reference} />}
       </div>
 
@@ -568,6 +568,7 @@ function saveEdit(){
       >
         Download PDF
       </button>
+
       <button
         onClick={() => setPage(2)}
         className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300"
@@ -577,6 +578,7 @@ function saveEdit(){
     </div>
   </section>
 )}
+
        </main>
 
     {/* Settings Modal */}
