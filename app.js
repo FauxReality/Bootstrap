@@ -237,127 +237,105 @@ function saveEdit(){
     {/* Settings Modal */}
     {showSettings && (<div className="fixed inset-0 bg-black/30 flex items-end md:items-center md:justify-center p-4" onClick={()=>setShowSettings(false)}><div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-4" onClick={e=>e.stopPropagation()}><div className="flex items-center justify-between mb-3"><h3 className="text-lg font-semibold">Settings</h3><button onClick={()=>setShowSettings(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">✕</button></div><div className="flex gap-2 mb-4 text-sm flex-wrap"><Tbtn a={tab==='services'} onClick={()=>setTab('services')}>Services</Tbtn><Tbtn a={tab==='methods'} onClick={()=>setTab('methods')}>Payment Methods</Tbtn><Tbtn a={tab==='branding'} onClick={()=>setTab('branding')}>Branding</Tbtn><Tbtn a={tab==='customers'} onClick={()=>setTab('customers')}>Customers</Tbtn><Tbtn a={tab==='plans'} onClick={()=>setTab('plans')}>Plans</Tbtn><Tbtn a={tab==='data'} onClick={()=>setTab('data')}>Data (Backup)</Tbtn></div>
       {tab==='services'&&(<div><label className="block text-sm font-medium mb-1">Add a new service</label><div className="flex gap-2"><input className="flex-1 border rounded-xl px-3 py-2" value={newService} onChange={e=>setNewService(e.target.value)} placeholder="e.g., Weekly Scoop"/><button onClick={()=>{const s=newService.trim();if(!s)return;if(!services.includes(s))setServices(p=>[...p,s]);setNewService('');}} className="rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700">Add</button></div><p className="text-xs text-gray-500 mt-1">Tap a service to select it, then the trash to delete. No limit.</p><div className="flex flex-wrap gap-2 mt-3">{services.length===0&&<span className="text-sm text-gray-500">No services yet.</span>}{services.map((s,i)=>{const sel=toDelete.includes(s);return(<button key={i} onClick={()=>setToDelete(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s])} className={cls("px-3 py-1 rounded-full border",sel?"bg-red-50 border-red-300 text-red-700":"bg-gray-50 hover:bg-gray-100")}>{s}</button>)})}</div><div className="flex justify-between items-center mt-6"><button onClick={()=>{if(!toDelete.length)return;setServices(services.filter(s=>!toDelete.includes(s)));setToDelete([]);}} disabled={!toDelete.length} className={cls("inline-flex items-center gap-2 rounded-xl px-3 py-2",toDelete.length?"bg-red-600 text-white hover:bg-red-700":"bg-gray-200 text-gray-500 cursor-not-allowed")}>🗑️ Delete selected</button><button onClick={()=>setShowSettings(false)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Done</button></div></div>)}
-     {tab==='methods' && (
+    {tab==='methods' && (
   <div>
     <h4 className="text-sm font-semibold mt-1">Payment Links</h4>
 
-    {/* Add a payment link */}
+    {/* Add new link */}
     <label className="block text-sm font-medium mb-1 mt-1">Add a payment link</label>
     <div className="grid md:grid-cols-3 gap-2">
-      <input
-        className="border rounded-xl px-3 py-2"
-        value={pmLabel}
-        onChange={e=>setPmLabel(e.target.value)}
-        placeholder="Label (Cashapp)"
-      />
-      <input
-        className="md:col-span-2 border rounded-xl px-3 py-2"
-        value={pmUrl}
-        onChange={e=>setPmUrl(e.target.value)}
-        placeholder="https://..."
-      />
+      <input className="border rounded-xl px-3 py-2"
+             value={pmLabel} onChange={e=>setPmLabel(e.target.value)}
+             placeholder="Label (Cashapp)"/>
+      <input className="md:col-span-2 border rounded-xl px-3 py-2"
+             value={pmUrl} onChange={e=>setPmUrl(e.target.value)}
+             placeholder="https://..."/>
     </div>
     <div className="flex justify-end mt-2">
       <button
         onClick={()=>{
-          const label = pmLabel.trim(), url = pmUrl.trim();
+          const label = (pmLabel||'').trim(), url = (pmUrl||'').trim();
           if(!label || !url) return;
-          setPaymentLinks(p => [...p, { label, url }]);
+          setPaymentLinks(p => [...(Array.isArray(p)?p:[]), {label, url}]);
           setPmLabel(''); setPmUrl('');
         }}
-        className="rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
-      >
+        className="rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700">
         Add Link
       </button>
     </div>
 
     {/* Existing links with Edit/Delete */}
     <div className="mt-3">
-      {paymentLinks.length===0 && (
+      {(!Array.isArray(paymentLinks) || paymentLinks.length===0) && (
         <p className="text-sm text-gray-500">No payment links yet.</p>
       )}
 
       <ul className="space-y-2">
-        {paymentLinks.map((l, idx) => (
+        {(Array.isArray(paymentLinks)?paymentLinks:[]).map((l, idx) => (
           <li key={idx} className="border rounded-xl px-3 py-2">
             {editIdx !== idx ? (
-              /* Read-only row */
+              /* read-only row */
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 truncate">
-                  <span className="font-medium">{l.label}</span> —{" "}
+                  <span className="font-medium">{l?.label || '(no label)'}</span> —{' '}
                   <a className="text-blue-600 hover:underline break-all"
-                     href={l.url} target="_blank" rel="noopener noreferrer">
-                    {l.url}
+                     href={l?.url || '#'} target="_blank" rel="noopener noreferrer">
+                    {l?.url || '(no url)'}
                   </a>
                 </div>
-
                 <div className="flex items-center gap-2 shrink-0">
                   {/* EDIT */}
                   <button
-                    onClick={() => { setEditIdx(idx); setEditTmp({label:l.label, url:l.url}); }}
+                    onClick={() => { setEditIdx(idx); setEditTmp({label:l?.label||'', url:l?.url||''}); }}
                     className="p-2 rounded-full border text-gray-700 hover:bg-gray-100"
-                    aria-label="Edit"
-                    title="Edit"
-                  >
+                    aria-label="Edit" title="Edit">
                     <EditIcon/>
                   </button>
-
-                  {/* DELETE (same behavior you had) */}
+                  {/* DELETE */}
                   <button
-                    onClick={() => setPaymentLinks(p => p.filter((_,i)=>i!==idx))}
+                    onClick={() => setPaymentLinks(p => (Array.isArray(p)?p:[]).filter((_,i)=>i!==idx))}
                     className="p-2 rounded-full border text-red-600 hover:bg-red-50"
-                    aria-label="Delete"
-                    title="Delete"
-                  >
+                    aria-label="Delete" title="Delete">
                     🗑️
                   </button>
                 </div>
               </div>
             ) : (
-              /* Inline editor for this row */
+              /* inline editor */
               <div className="w-full">
                 <div className="grid md:grid-cols-5 gap-2 items-end">
                   <div className="md:col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">Label</label>
-                    <input
-                      className="w-full border rounded-xl px-3 py-2"
-                      value={editTmp.label}
-                      onChange={e=>setEditTmp(v=>({...v, label:e.target.value}))}
-                      placeholder="e.g. Cash App"
-                    />
+                    <input className="w-full border rounded-xl px-3 py-2"
+                           value={editTmp.label}
+                           onChange={e=>setEditTmp(v=>({...v, label:e.target.value}))}
+                           placeholder="e.g. Cash App"/>
                   </div>
                   <div className="md:col-span-3">
                     <label className="block text-xs text-gray-500 mb-1">URL</label>
-                    <input
-                      className="w-full border rounded-xl px-3 py-2"
-                      value={editTmp.url}
-                      onChange={e=>setEditTmp(v=>({...v, url:e.target.value}))}
-                      placeholder="https://…"
-                    />
+                    <input className="w-full border rounded-xl px-3 py-2"
+                           value={editTmp.url}
+                           onChange={e=>setEditTmp(v=>({...v, url:e.target.value}))}
+                           placeholder="https://…"/>
                   </div>
                 </div>
-
                 <div className="flex justify-end gap-2 mt-3">
-                  <button
-                    onClick={()=>setEditIdx(null)}
-                    className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300"
-                  >
+                  <button onClick={()=>setEditIdx(null)}
+                          className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300">
                     Cancel
                   </button>
                   <button
                     onClick={()=>{
-                      const label = (editTmp.label||'').trim();
-                      const url   = (editTmp.url||'').trim();
+                      const label=(editTmp.label||'').trim();
+                      const url=(editTmp.url||'').trim();
                       if(!label || !url){ setEditIdx(null); return; }
-                      setPaymentLinks(p=>{
-                        const next=[...p];
-                        next[idx]={label,url};
-                        return next;
+                      setPaymentLinks(prev=>{
+                        const p=(Array.isArray(prev)?[...prev]:[]);
+                        p[idx]={label,url}; return p;
                       });
                       setEditIdx(null);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                  >
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
                     Save
                   </button>
                 </div>
@@ -376,7 +354,6 @@ function saveEdit(){
     </div>
   </div>
 )}
-
       {tab==='branding'&&(<div><div className="grid md:grid-cols-2 gap-4"><div className="md:col-span-2"><h4 className="text-sm font-semibold">Business Branding</h4></div><div><label className="block text-sm mb-1">Business Name</label><input className="w-full border rounded-xl px-3 py-2" value={biz.name} onChange={e=>setBiz({...biz,name:e.target.value})} placeholder="Your Business LLC"/></div><div><label className="block text-sm mb-1">Phone</label><input className="w-full border rounded-xl px-3 py-2" value={biz.phone} onChange={e=>setBiz({...biz,phone:e.target.value})} placeholder="(555) 555-5555"/></div><div><label className="block text-sm mb-1">Email</label><input className="w-full border rounded-xl px-3 py-2" value={biz.email} onChange={e=>setBiz({...biz,email:e.target.value})} placeholder="you@example.com"/></div><div className="md:col-span-2"><label className="block text-sm mb-1">Address</label><input className="w-full border rounded-xl px-3 py-2" value={biz.address} onChange={e=>setBiz({...biz,address:e.target.value})} placeholder="123 Main St, City, ST 12345"/></div><div><label className="block text-sm mb-1">Logo (URL)</label><input className="w-full border rounded-xl px-3 py-2" value={biz.logoUrl} onChange={e=>setBiz({...biz,logoUrl:e.target.value})} placeholder="https://..."/><p className="text-xs text-gray-500 mt-1">Or upload:</p><input type="file" accept="image/*" className="mt-1" onChange={e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>setBiz({...biz,logoUrl:String(r.result)});r.readAsDataURL(f);}}/></div><div className="flex items-center justify-center gap-3">{biz.logoUrl?<img src={biz.logoUrl} alt="logo" className="w-16 h-16 object-contain rounded-xl border"/>:<div className="w-16 h-16 rounded-xl border flex items-center justify-center text-xs text-gray-400">No logo</div>}</div></div><div className="flex justify-end mt-6"><button onClick={()=>setShowSettings(false)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Done</button></div></div>)}
       {tab==='customers'&&(<div><h4 className="text-sm font-semibold mb-2">Add / Edit Customer</h4><div className="grid md:grid-cols-4 gap-3"><input className="border rounded-xl px-3 py-2" placeholder="First" value={custForm.firstName} onChange={e=>setCustForm({...custForm,firstName:e.target.value})}/><input className="border rounded-xl px-3 py-2" placeholder="Last" value={custForm.lastName} onChange={e=>setCustForm({...custForm,lastName:e.target.value})}/><input className="border rounded-xl px-3 py-2" placeholder="Phone" value={custForm.phone} onChange={e=>setCustForm({...custForm,phone:e.target.value})}/><input className="border rounded-xl px-3 py-2" placeholder="Email" value={custForm.email} onChange={e=>setCustForm({...custForm,email:e.target.value})}/><div className="md:col-span-4 text-xs text-gray-600">Preferred Contact</div><div className="md:col-span-4 flex gap-4 text-sm">{['Call','Text','Email'].map(opt=>(<label key={opt} className="inline-flex items-center gap-2"><input type="checkbox" checked={(custForm.preferred||[]).includes(opt)} onChange={e=>{const s=new Set(custForm.preferred||[]);e.target.checked?s.add(opt):s.delete(opt);setCustForm({...custForm,preferred:[...s]});}}/> {opt}</label>))}</div><div className="md:col-span-4 text-xs text-gray-600">Billing Address</div><input className="border rounded-xl px-3 py-2" placeholder="Address" value={custForm.billing.address} onChange={e=>setCustForm({...custForm,billing:{...custForm.billing,address:e.target.value}})}/><input className="border rounded-xl px-3 py-2" placeholder="City" value={custForm.billing.city} onChange={e=>setCustForm({...custForm,billing:{...custForm.billing,city:e.target.value}})}/><select className="border rounded-xl px-3 py-2" value={custForm.billing.state} onChange={e=>setCustForm({...custForm,billing:{...custForm.billing,state:e.target.value}})}>{statesUS.map(s=><option key={s} value={s}>{s}</option>)}</select><input className="border rounded-xl px-3 py-2" placeholder="ZIP" value={custForm.billing.zip} onChange={e=>setCustForm({...custForm,billing:{...custForm.billing,zip:e.target.value}})}/><div className="md:col-span-4 text-xs text-gray-600">Service Address</div><input className="border rounded-xl px-3 py-2" placeholder="Address" value={custForm.service.address} onChange={e=>setCustForm({...custForm,service:{...custForm.service,address:e.target.value}})}/><input className="border rounded-xl px-3 py-2" placeholder="City" value={custForm.service.city} onChange={e=>setCustForm({...custForm,service:{...custForm.service,city:e.target.value}})}/><select className="border rounded-xl px-3 py-2" value={custForm.service.state} onChange={e=>setCustForm({...custForm,service:{...custForm.service,state:e.target.value}})}>{statesUS.map(s=><option key={s} value={s}>{s}</option>)}</select><input className="border rounded-xl px-3 py-2" placeholder="ZIP" value={custForm.service.zip} onChange={e=>setCustForm({...custForm,service:{...custForm.service,zip:e.target.value}})}/><div className="md:col-span-4"><label className="block text-sm font-medium mb-1">Default Services</label><Multi options={services} selected={custForm.defaultServices||[]} onToggle={opt=>{const ex=(custForm.defaultServices||[]).includes(opt);setCustForm({...custForm,defaultServices:ex?custForm.defaultServices.filter(s=>s!==opt):[...(custForm.defaultServices||[]),opt]});}} placeholder="Select services"/></div><div className="md:col-span-4"><textarea className="w-full border rounded-xl px-3 py-2 min-h-[64px]" placeholder="Notes" value={custForm.notes} onChange={e=>setCustForm({...custForm,notes:e.target.value})}/></div></div><div className="flex justify-end gap-2 mt-3"><button onClick={()=>setCustForm({...emptyCustomer})} className="rounded-xl px-3 py-2 bg-gray-200 hover:bg-gray-300">Clear</button><button onClick={()=>{if(!custForm.firstName&&!custForm.lastName)return;if(custForm.id)setCustomers(p=>p.map(c=>c.id===custForm.id?{...custForm}:c));else{const id=gid('cst');setCustomers(p=>[...p,{...custForm,id}]);setCustForm({...emptyCustomer});}}} className="rounded-xl px-3 py-2 bg-blue-600 text-white hover:bg-blue-700">{custForm.id?'Save Changes':'Add Customer'}</button></div><h4 className="text-sm font-semibold mt-6 mb-2">Customers</h4><div className="max-h-64 overflow-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2 text-left">Name</th><th className="p-2 text-left">Phone</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Actions</th></tr></thead><tbody>{customers.map(c=>(<tr key={c.id} className="border-t"><td className="p-2">{c.firstName} {c.lastName}</td><td className="p-2">{c.phone}</td><td className="p-2">{c.email}</td><td className="p-2"><div className="flex gap-2"><button onClick={()=>setCustForm({...c})} className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300">Edit</button><button onClick={()=>setCustomers(p=>p.filter(x=>x.id!==c.id))} className="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Delete</button></div></td></tr>))}{customers.length===0&&(<tr><td className="p-3 text-sm text-gray-500" colSpan={4}>No customers yet.</td></tr>)}</tbody></table></div></div>)}
       {tab==='plans'&&(<PlansTab customers={customers} plans={plans} setPlans={setPlans} services={services} biz={biz}/>) }
