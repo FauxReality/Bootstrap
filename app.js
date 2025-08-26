@@ -439,24 +439,22 @@ function saveEdit(){
         </button>
       </div>
 
-      {paymentLinks?.length>0 && (
-        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3">
-          <div className="text-sm font-semibold mb-2 text-blue-900">Pay Online</div>
-          <div className="flex flex-wrap gap-3">
-            {paymentLinks.map((l,i)=>(
-  <a
-    key={i}
-    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700"
-    href={makePayUrl(l, subTotal, reg, invoice)}
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <LinkIcon/><span className="font-medium">{l.label}</span>
-  </a>
-))}
-          </div>
-        </div>
-      )}
+     {paymentLinks?.length>0 && (
+  <div className="mt-4 border rounded-2xl p-3 bg-white">
+    <div className="text-sm font-semibold mb-2">Pay Online</div>
+    <div className="flex flex-wrap gap-2">
+      {paymentLinks.map((l,i)=>(
+        <a key={i}
+           className="h-9 inline-flex items-center gap-1 px-3 rounded-full bg-blue-50 border border-blue-100 hover:bg-blue-100 text-blue-700"
+           href={makePayUrl(l, subTotal, reg, invoice)}
+           target="_blank" rel="noopener noreferrer">
+          <LinkIcon/><span className="font-medium">{l.label}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
 
       <div className="mt-4 grid md:grid-cols-3 gap-4 items-start">
         <div className="md:col-span-2">
