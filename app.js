@@ -357,7 +357,7 @@ function saveEdit(){
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-base">
           <thead>
             <tr className="text-left bg-gray-50">
               <th className="p-2">#</th>
