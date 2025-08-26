@@ -484,8 +484,6 @@ function saveEdit(){
         Download PDF
       </button>
       <button onClick={()=>setPage(1)} className={`${BTN.secondary}`}>Back</button>
-        Back
-      </button>
       <button onClick={()=>setPage(3)} className={`${BTN.primary} bg-green-600 hover:bg-green-700`}>Continue to Receipt</button>
 </div>
 
