@@ -417,12 +417,24 @@ function PlanItems({items,setItems}){const local=items&&items.length?items:[{des
 
 function GearIcon(){return(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.065 2.572c.94 1.543-.827 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.827-2.37-2.37a1.724 1.724 0 00-1.066-2.572c-1.756-.426-1.756-2.924 0-3.35.46-.111.86-.411 1.066-.82z"/></svg>);} 
 function LinkIcon(){return(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M10.59 13.41a1 1 0 010-1.41l2.59-2.59a1 1 0 111.41 1.41l-2.59 2.59a1 1 0 01-1.41 0z"/><path d="M12.88 4.12a5 5 0 017.07 7.07l-1.76 1.76a1 1 0 01-1.41-1.41l1.76-1.76a3 3 0 10-4.24-4.24l-1.76 1.76a1 1 0 11-1.41-1.41l1.76-1.76z"/><path d="M4.05 12.05a5 5 0 017.07 0 1 1 0 11-1.41 1.41 3 3 0 00-4.24 0l-1.76 1.76a3 3 0 104.24 4.24l1.76-1.76a1 1 0 111.41 1.41l-1.76 1.76a5 5 0 11-7.07-7.07l1.76-1.76z"/></svg>);}
+function TrashIcon(){return(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" strokeWidth="1.5"
+     className="w-5 h-5" aria-hidden="true">
+  <path strokeLinecap="round" strokeLinejoin="round"
+        d="M3 6h18M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1m1 0v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0v12m4-12v12m4-12v12" />
+</svg>
+  );
+}
+
 function EditIcon(){
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         className="w-5 h-5" fill="currentColor" aria-hidden="true">
-      <path d="M16.862 3.487a1.5 1.5 0 0 1 2.121 2.121l-10.5 10.5a1.5 1.5 0 0 1-.53.353l-3.375 1.125a.5.5 0 0 1-.633-.633l1.125-3.375a1.5 1.5 0 0 1 .353-.53l10.5-10.5zM15.75 4.5l3.75 3.75" />
-    </svg>
+     fill="none" stroke="currentColor" strokeWidth="1.5"
+     className="w-5 h-5" aria-hidden="true">
+  <path strokeLinecap="round" strokeLinejoin="round"
+        d="M16.862 3.487a2.25 2.25 0 0 1 3.182 3.182L8.25 18.463l-4.5 1.5 1.5-4.5L16.862 3.487z" />
+  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 4.5l3.75 3.75" />
+</svg>
   );
 }
 
