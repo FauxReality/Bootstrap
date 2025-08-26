@@ -34,6 +34,69 @@ const ls={get:(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v)
 const statesUS=["AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
 const cls=(...a)=>a.filter(Boolean).join(" ");
 const cur=n=>Number(n||0).toLocaleString(undefined,{style:"currency",currency:"USD"});
+// Build a payment URL that pre-fills the amount (and note where supported)
+function makePayUrl(link, amount, reg, invoice){
+  const amt = (Number(amount) || 0).toFixed(2);
+  const note = `Invoice ${invoice?.invoiceNumber || ''} ${reg?.firstName || ''} ${reg?.lastName || ''}`.trim();
+  const encNote = encodeURIComponent(note);
+
+  let raw = (link?.url || '').trim();
+  if (!raw) return '#';
+
+  // normalize common inputs (users sometimes save "$tag" or "venmo.com/user")
+  if (/^(\$|cash\.app\/\$)/i.test(raw)) raw = 'https://' + raw.replace(/^https?:\/\//,'');
+  if (/^venmo\.com\//i.test(raw))       raw = 'https://' + raw;
+  if (/^paypal\.me\//i.test(raw))       raw = 'https://' + raw;
+
+  const ensureHttp = (u) => (u.startsWith('http') ? u : 'https://' + u.replace(/^\/+/,''));
+
+  try{
+    const u = new URL(ensureHttp(raw));
+    const host = u.hostname.replace(/^www\./,'');
+    const path = u.pathname.replace(/^\/+/,''); // e.g. "$yourtag" or "yourhandle"
+
+    // --- Cash App: https://cash.app/$cashtag/amount (no note supported)
+    if (host === 'cash.app'){
+      // path may be "$tag" or just "tag" depending on how it was saved
+      const tag = path.startsWith('$') ? path.slice(1) : path;
+      if (tag) return `https://cash.app/$${tag}/${amt}`;
+    }
+
+    // --- PayPal.me: https://paypal.me/handle/amount
+    if (host === 'paypal.me'){
+      const handle = path.split('/')[0];
+      if (handle) return `https://paypal.me/${handle}/${amt}`;
+    }
+
+    // --- Venmo Web: https://venmo.com/username?txn=pay&amount=12.34&note=...
+    if (host === 'venmo.com'){
+      const user = path.split('/')[0];
+      if (user) return `https://venmo.com/${user}?txn=pay&amount=${amt}&note=${encNote}`;
+    }
+
+    // Heuristics if user saved just a handle/label
+    const label = (link?.label || '').toLowerCase();
+
+    if (label.includes('venmo') && !/venmo\.com/.test(raw)){
+      const user = raw.replace(/^(https?:\/\/)?@?/,'').replace(/^\/+/,'');
+      if (user) return `https://venmo.com/${user}?txn=pay&amount=${amt}&note=${encNote}`;
+    }
+    if (label.includes('paypal') && !/paypal\.me/.test(raw)){
+      const handle = raw.replace(/^(https?:\/\/)?@?/,'').replace(/^\/+/,'');
+      return `https://paypal.me/${handle}/${amt}`;
+    }
+    if (label.includes('cash') && !/cash\.app/.test(raw)){
+      const tag = raw.replace(/^(https?:\/\/)?\$?/,'').replace(/^\/+/,'');
+      return `https://cash.app/$${tag}/${amt}`;
+    }
+
+    // Fallback: original link
+    return u.toString();
+  }catch{
+    return raw;
+  }
+}
+
 const today=()=>new Date().toISOString().slice(0,10);
 const gid=(p='id')=>`${p}_${Math.random().toString(36).slice(2,9)}`;
 const wday=(iso)=>{if(!iso)return'';const d=new Date(iso+'T00:00:00');return d.toLocaleDateString(undefined,{weekday:'long'})+`, ${iso}`;};
@@ -345,12 +408,16 @@ function saveEdit(){
           <div className="text-sm font-semibold mb-2 text-blue-900">Pay Online</div>
           <div className="flex flex-wrap gap-3">
             {paymentLinks.map((l,i)=>(
-              <a key={i}
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700"
-                 href={l.url} target="_blank" rel="noopener noreferrer">
-                <LinkIcon/><span className="font-medium">{l.label}</span>
-              </a>
-            ))}
+  <a
+    key={i}
+    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border hover:bg-blue-100 text-blue-700"
+    href={makePayUrl(l, subTotal, reg, invoice)}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <LinkIcon/><span className="font-medium">{l.label}</span>
+  </a>
+))}
           </div>
         </div>
       )}
