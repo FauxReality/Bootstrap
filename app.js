@@ -175,8 +175,6 @@ function saveEdit(){
   const [invoice,setInvoice]=useState(()=>({invoiceNumber:nextInvoiceNumber(),invoiceDate:today(),dueDate:today(),items:[{desc:'',qty:1,price:0}],notes:'',autoFromReg:false}));
   const subTotal=useMemo(()=>invoice.items.reduce((s,i)=>s+(Number(i.qty)||0)*(Number(i.price)||0),0),[invoice.items]);
   const [payment,setPayment]=useState({method:'Cash',amount:0,date:today(),reference:''}); useEffect(()=>setPayment(p=>({...p,amount:Number(subTotal.toFixed(2))})),[subTotal]);
-  const [editIdx, setEditIdx] = useState(null);          // which row is being edited
-  const [editTmp, setEditTmp] = useState({ label:'', url:'' }); // temp values
   useEffect(()=>{runSelfTests();},[]);
  
   // Customers utils
