@@ -526,8 +526,58 @@ function saveEdit(){
   </section>
 )}
 
-      {page===3 && (<section className="bg-white rounded-2xl shadow p-4 md:p-6"><div id="receipt-print"><Brand biz={biz}/><h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Invoice #" val={String(invoice.invoiceNumber)}/><RO label="Payment Date" val={payment.date}/><RO label="Service Day" val={wday(reg.serviceDate)}/><RO label="Method" val={payment.method}/>{payment.reference&&<RO label="Reference" val={payment.reference}/>}</div><div className="grid md:grid-cols-2 gap-4 mb-6"><RO label="Received From" val={`${reg.firstName} ${reg.lastName}`}/><RO label="Contact" val={`${reg.phone} • ${reg.email}`}/><RO label="Address" val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2"/></div><div className="bg-gray-50 rounded-2xl p-4"><div className="flex justify-between text-base font-semibold"><span>Amount Received</span><span>{cur(payment.amount)}</span></div><p className="text-sm text-gray-600 mt-2">Thank you for your business.</p></div></div><div className="flex flex-wrap gap-2 justify-end mt-6"><button onClick={()=>openPdfFromEl(document.getElementById('receipt-print'),`Receipt-${invoice?.invoiceNumber ??''}`)} className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-blue">Download PDF</button><button onClick={()=>setPage(2)} className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300">Back to Invoice</button></div></section>)}
-    </main>
+      {page===3 && (
+  <section className="bg-white rounded-2xl shadow p-4 md:p-6">
+    <div id="receipt-print">
+      <Brand biz={biz} />
+
+      <h2 className="text-lg font-semibold mb-4 text-center">Payment Receipt</h2>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <RO label="Invoice #"    val={String(invoice.invoiceNumber)} />
+        <RO label="Payment Date" val={payment.date} />
+        <RO label="Service Day"  val={wday(reg.serviceDate)} />
+        <RO label="Method"       val={payment.method} />
+        {payment.reference && <RO label="Reference" val={payment.reference} />}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <RO label="Received From" val={`${reg.firstName} ${reg.lastName}`} />
+        <RO label="Contact"       val={`${reg.phone} • ${reg.email}`} />
+        <RO label="Address"       val={`${reg.address}, ${reg.city}, ${reg.state} ${reg.zip}`} className="md:col-span-2" />
+      </div>
+
+      <div className="bg-gray-50 rounded-2xl p-4">
+        <div className="flex justify-between text-base font-semibold">
+          <span>Amount Received</span>
+          <span>{cur(payment.amount)}</span>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">Thank you for your business.</p>
+      </div>
+    </div>
+
+    <div className="flex flex-wrap gap-2 justify-end mt-6">
+      <button
+        onClick={() =>
+          openPdfFromEl(
+            document.getElementById('receipt-print'),
+            `Receipt-${invoice?.invoiceNumber ?? ''}`
+          )
+        }
+        className="rounded-xl px-4 py-2 bg-gray-900 text-white hover:bg-black"
+      >
+        Download PDF
+      </button>
+      <button
+        onClick={() => setPage(2)}
+        className="rounded-xl px-4 py-2 bg-gray-200 hover:bg-gray-300"
+      >
+        Back to Invoice
+      </button>
+    </div>
+  </section>
+)}
+       </main>
 
     {/* Settings Modal */}
     {showSettings && (<div className="fixed inset-0 bg-black/30 flex items-end md:items-center md:justify-center p-4" onClick={()=>setShowSettings(false)}><div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-4" onClick={e=>e.stopPropagation()}><div className="flex items-center justify-between mb-3"><h3 className="text-lg font-semibold">Settings</h3><button onClick={()=>setShowSettings(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">✕</button></div><div className="flex gap-2 mb-4 text-sm flex-wrap"><Tbtn a={tab==='services'} onClick={()=>setTab('services')}>Services</Tbtn><Tbtn a={tab==='methods'} onClick={()=>setTab('methods')}>Payment Methods</Tbtn><Tbtn a={tab==='branding'} onClick={()=>setTab('branding')}>Branding</Tbtn><Tbtn a={tab==='customers'} onClick={()=>setTab('customers')}>Customers</Tbtn><Tbtn a={tab==='plans'} onClick={()=>setTab('plans')}>Plans</Tbtn><Tbtn a={tab==='data'} onClick={()=>setTab('data')}>Data (Backup)</Tbtn></div>
