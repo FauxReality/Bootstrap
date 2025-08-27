@@ -288,7 +288,6 @@ function saveEdit(){
     </button>
   )}
 </div>
-</header>
 
       <nav className="mb-4 flex gap-2 text-sm flex-wrap"><Pill label="1. Registration" act={page===1} onClick={()=>setPage(1)}/><Pill label="2. Invoice" act={page===2} onClick={()=>setPage(2)}/><Pill label="3. Receipt" act={page===3} onClick={()=>setPage(3)}/></nav>
 
