@@ -33,6 +33,103 @@ function injectImgMaxCSS() {
 const ls={get:(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
 const statesUS=["AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
 const cls = (...a) => a.filter(Boolean).join(' ');
+const RO = ({ label, val, className='' }) => (
+  <div className={className}>
+    <div className="text-[15px] font-medium mb-1 text-gray-700">{label}</div>
+    <div className="text-base leading-6">{val || '—'}</div>
+  </div>
+);
+
+const Multi = ({ options = [], selected = [], onToggle, placeholder = "Select..." }) => {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="flex w-full flex-wrap gap-2 border rounded-xl px-3 py-2 min-h-[44px] cursor-pointer bg-white"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        {selected.length === 0 ? (
+          <span className="text-gray-400">{placeholder}</span>
+        ) : (
+          selected.map((s, i) => (
+            <span
+              key={i}
+              className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200"
+            >
+              {s}
+            </span>
+          ))
+        )}
+        <span className="ml-auto text-gray-500">▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border rounded-xl shadow">
+          {options.length === 0 && (
+            <div className="p-3 text-sm text-gray-500">No options yet. Add in Settings.</div>
+          )}
+          {options.map((opt, i) => {
+            const sel = selected.includes(opt);
+            return (
+              <button
+                type="button"
+                key={i}
+                onClick={() => onToggle(opt)}
+                className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <span
+                  className={cls(
+                    "inline-flex h-4 w-4 items-center justify-center border rounded",
+                    sel && "bg-blue-600 border-blue-600 text-white"
+                  )}
+                >
+                  {sel ? "✓" : ""}
+                </span>
+                <span>{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+const Brand = ({ biz, nameClass = "text-xl", metaClass = "text-xl" }) => {
+  if (!(biz?.name || biz?.logoUrl || biz?.phone || biz?.email || biz?.address || biz?.city || biz?.state)) return null;
+  const name   = biz?.name || "";
+  const citySt = [biz?.city, biz?.state].filter(Boolean).join(", ");
+
+  return (
+    <div className="brand flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 text-left">
+      <div>
+        {biz?.logoUrl ? (
+          <img className="brand-img" src={biz.logoUrl} alt={name || "Logo"} />
+        ) : (
+          <div style={{ width: 72, height: 72 }} className="rounded-xl border flex items-center justify-center text-[10px] text-gray-400">Logo</div>
+        )}
+      </div>
+
+      <div className="brand-info">
+        {name ? <div className={`name font-semibold ${nameClass}`}>{name}</div> : null}
+
+        <div className={`meta text-gray-600 leading-tight ${metaClass}`}>
+          {biz?.phone ? <div>{biz.phone}</div> : null}
+          {biz?.email ? (
+            <div>
+              <a className="underline text-blue-600" href={`mailto:${biz.email}`}>{biz.email}</a>
+            </div>
+          ) : null}
+          {biz?.address ? <div>{biz.address}</div> : null}
+          {citySt ? <div>{citySt}</div> : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const cur=n=>Number(n||0).toLocaleString(undefined,{style:"currency",currency:"USD"});
 // Build a payment URL that pre-fills the amount (and note where supported)
 function makePayUrl(link, amount, reg, invoice){
@@ -708,102 +805,9 @@ function saveEdit(){
 const Pill=({label,act,onClick})=> (<button onClick={onClick} className={cls("px-3 py-1.5 rounded-full border",act?"bg-blue-600 text-white border-blue-600":"bg-white hover:bg-gray-50")}>{label}</button>);
 const Tbtn=({children,a,onClick})=> (<button onClick={onClick} className={cls("px-3 py-1.5 rounded-full border",a?"bg-blue-600 text-white border-blue-600":"bg-white hover:bg-gray-50")}>{children}</button>);
 const Inp=({label,val,set,type="text",ph,req,pattern})=> (<div><label className="block text-sm font-medium mb-1">{label}{req&&<span className="text-red-500">*</span>}</label><input className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring" value={val} onChange={e=>set(e.target.value)} type={type} placeholder={ph} required={req} pattern={pattern}/></div>);
-const RO = ({ label, val, className='' }) => (
-  <div className={className}>
-    <div className="text-[15px] font-medium mb-1 text-gray-700">{label}</div>
-    <div className="text-base leading-6">{val || '—'}</div>
-  </div>
-);
+
      
-const Multi = ({ options = [], selected = [], onToggle, placeholder = "Select..." }) => {
-  const [open, setOpen] = useState(false);
 
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        className="flex w-full flex-wrap gap-2 border rounded-xl px-3 py-2 min-h-[44px] cursor-pointer bg-white"
-        onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
-      >
-        {selected.length === 0 ? (
-          <span className="text-gray-400">{placeholder}</span>
-        ) : (
-          selected.map((s, i) => (
-            <span
-              key={i}
-              className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200"
-            >
-              {s}
-            </span>
-          ))
-        )}
-        <span className="ml-auto text-gray-500">▾</span>
-      </button>
-
-      {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border rounded-xl shadow">
-          {options.length === 0 && (
-            <div className="p-3 text-sm text-gray-500">No options yet. Add in Settings.</div>
-          )}
-          {options.map((opt, i) => {
-            const sel = selected.includes(opt);
-            return (
-              <button
-                type="button"
-                key={i}
-                onClick={() => onToggle(opt)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <span
-                  className={cls(
-                    "inline-flex h-4 w-4 items-center justify-center border rounded",
-                    sel && "bg-blue-600 border-blue-600 text-white"
-                  )}
-                >
-                  {sel ? "✓" : ""}
-                </span>
-                <span>{opt}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-const Brand = ({ biz, nameClass = "text-xl", metaClass = "text-xl" }) => {
-  if (!(biz?.name || biz?.logoUrl || biz?.phone || biz?.email || biz?.address || biz?.city || biz?.state)) return null;
-  const name   = biz?.name || "";
-  const citySt = [biz?.city, biz?.state].filter(Boolean).join(", ");
-
-  return (
-    <div className="brand flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 text-left">
-      <div>
-        {biz?.logoUrl ? (
-          <img className="brand-img" src={biz.logoUrl} alt={name || "Logo"} />
-        ) : (
-          <div style={{ width: 72, height: 72 }} className="rounded-xl border flex items-center justify-center text-[10px] text-gray-400">Logo</div>
-        )}
-      </div>
-
-      <div className="brand-info">
-        {name ? <div className={`name font-semibold ${nameClass}`}>{name}</div> : null}
-
-        <div className={`meta text-gray-600 leading-tight ${metaClass}`}>
-          {biz?.phone ? <div>{biz.phone}</div> : null}
-          {biz?.email ? (
-            <div>
-              <a className="underline text-blue-600" href={`mailto:${biz.email}`}>{biz.email}</a>
-            </div>
-          ) : null}
-          {biz?.address ? <div>{biz.address}</div> : null}
-          {citySt ? <div>{citySt}</div> : null}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 function PlansTab({customers,plans,setPlans,services,biz}){
   const [f,setF]=useState({id:'',customerId:'',name:'',frequency:'weekly',interval:1,startDate:today(),nextDate:today(),endDate:'',services:[],items:[],dueRule:{daysAfter:7},active:true});
