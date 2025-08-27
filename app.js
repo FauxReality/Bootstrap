@@ -274,22 +274,20 @@ function saveEdit(){
     
    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
   <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      {/* Optional tiny logo */}
-      {/* {biz?.logoUrl && <img src={biz.logoUrl} alt="" className="w-6 h-6 rounded" />} */}
-      <span className="font-semibold tracking-tight">
-        {biz?.name || 'Care-Free Tails'}
-      </span>
-    </div>
-
+   <div className="flex items-center gap-2">
+  {biz?.logoUrl && <img src={biz.logoUrl} alt="" className="w-6 h-6 rounded" />}
+  {biz?.name ? (
+    <span className="font-semibold tracking-tight">{biz.name}</span>
+  ) : (
     <button
       onClick={()=>setShowSettings(true)}
-      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border hover:bg-gray-50 text-sm"
-      aria-label="Open settings"
+      className="text-sm text-gray-600 underline underline-offset-2"
+      aria-label="Open settings to add business name"
     >
-      ⚙️ <span className="hidden sm:inline">Settings</span>
+      Add your business name
     </button>
-  </div>
+  )}
+</div>
 </header>
 
       <nav className="mb-4 flex gap-2 text-sm flex-wrap"><Pill label="1. Registration" act={page===1} onClick={()=>setPage(1)}/><Pill label="2. Invoice" act={page===2} onClick={()=>setPage(2)}/><Pill label="3. Receipt" act={page===3} onClick={()=>setPage(3)}/></nav>
