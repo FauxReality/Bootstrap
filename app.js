@@ -32,7 +32,7 @@ function injectImgMaxCSS() {
 // ---------- Mini helpers ----------
 const ls={get:(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
 const statesUS=["AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
-const cls=(...a)=>a.filter(Boolean).join(" ");
+const const cls = (...a) => a.filter(Boolean).join(' ');
 const cur=n=>Number(n||0).toLocaleString(undefined,{style:"currency",currency:"USD"});
 // Build a payment URL that pre-fills the amount (and note where supported)
 function makePayUrl(link, amount, reg, invoice){
@@ -756,7 +756,7 @@ const Multi = ({ options = [], selected = [], onToggle, placeholder = "Select...
                 className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"
               >
                 <span
-                  className={cn(
+                  className={cls(
                     "inline-flex h-4 w-4 items-center justify-center border rounded",
                     sel && "bg-blue-600 border-blue-600 text-white"
                   )}
