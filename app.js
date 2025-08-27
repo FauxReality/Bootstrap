@@ -130,8 +130,8 @@ function openPdfFromEl(el, title){
       /* Header layout (same as screen: logo left, text right) */
     .brand{ display:flex; flex-direction:row; gap:12px; align-items:center; margin-bottom:16px; text-align:left }
     .brand img{ object-fit:contain; border-radius:12px; border:1px solid #e5e7eb }
-    .brand .name{ font-size:18px; font-weight:700 }
-    .brand .meta{ color:#4b5563; font-size:16px; line-height:1.3 }
+    .brand .name{ font-size:28px; font-weight:700 }
+    .brand .meta{ color:#4b5563; font-size:18px; line-height:1.3 }
     .brand .meta div{ margin-top:2px }
 
     /* Tables etc. (keep your existing look) */
