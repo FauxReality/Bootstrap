@@ -341,7 +341,7 @@ function saveEdit(){
       <h2 className="text-lg font-semibold mb-4 text-center">Invoice</h2>
 
       {/* Info grid — hide duplicates in PDF */}
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6 text-base">
         <RO label="Customer"    val={`${reg.firstName} ${reg.lastName}`} />
         <RO label="Phone"       val={reg.phone} className="pdf-hide" />
         <RO label="Email"       val={reg.email} />
@@ -716,11 +716,11 @@ function RO({ label, val, className='' }){
   return (
     <div className={className}>
       <div className="text-[15px] font-medium mb-1 text-gray-700">{label}</div>
-      <div className="text-base">{val || '—'}</div>
+      <div className="text-base leading-6">{val || '—'}</div>
     </div>
   );
 }
-
+     
 function Multi({options,selected,onToggle,placeholder}){const [open,setOpen]=useState(false);return(<div className="relative"><div className="flex flex-wrap gap-2 border rounded-xl px-3 py-2 min-h-[44px] cursor-pointer bg-white" onClick={()=>setOpen(!open)}>{selected.length===0?<span className="text-gray-400">{placeholder}</span>:selected.map((s,i)=>(<span key={i} className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200">{s}</span>))}<span className="ml-auto text-gray-500">▾</span></div>{open&&(<div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border rounded-xl shadow">{options.length===0&&(<div className="p-3 text-sm text-gray-500">No options yet. Add in Settings.</div>)}{options.map((opt,i)=>{const sel=selected.includes(opt);return(<button key={i} onClick={()=>onToggle(opt)} className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2"><span className={cls("inline-flex h-4 w-4 items-center justify-center border rounded",sel?"bg-blue-600 border-blue-600 text-white":"bg-white")}>{sel?"✓":""}</span><span>{opt}</span></button>)})}</div>)}</div>);}
 const Brand = ({ biz, nameClass = "text-2xl", metaClass = "text-lg" }) => {
   if (!(biz?.name || biz?.logoUrl || biz?.phone || biz?.email || biz?.address || biz?.city || biz?.state)) return null;
