@@ -278,7 +278,7 @@ function saveEdit(){
       {/* Optional tiny logo */}
       {/* {biz?.logoUrl && <img src={biz.logoUrl} alt="" className="w-6 h-6 rounded" />} */}
       <span className="font-semibold tracking-tight">
-        {biz?.name || 'Care-Free Tails'}
+        {biz?.name || 'Your Business'}
       </span>
     </div>
 
