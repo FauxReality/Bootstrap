@@ -271,8 +271,7 @@ function saveEdit(){
 
   // ---------- UI ----------
   return (<div className="min-h-screen bg-gray-100 text-gray-900">
-    <header className="bg-white sticky top-0 z-10 shadow-sm"><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><h1 className="text-xl font-semibold">Simple 3-Page App</h1><button onClick={()=>{setShowSettings(true);setTab('services');}} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300">Settings <GearIcon/></button></div></header>
-
+    
    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
   <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
     <div className="flex items-center gap-2">
