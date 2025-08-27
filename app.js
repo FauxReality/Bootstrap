@@ -32,7 +32,7 @@ function injectImgMaxCSS() {
 // ---------- Mini helpers ----------
 const ls={get:(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
 const statesUS=["AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
-const const cls = (...a) => a.filter(Boolean).join(' ');
+const cls = (...a) => a.filter(Boolean).join(' ');
 const cur=n=>Number(n||0).toLocaleString(undefined,{style:"currency",currency:"USD"});
 // Build a payment URL that pre-fills the amount (and note where supported)
 function makePayUrl(link, amount, reg, invoice){
